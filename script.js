@@ -1,5 +1,4 @@
-
-    let goalAmount = 0;
+let goalAmount = 0;
     let retireYears = 0;
     let assetsProjection = [];
     const inflationRate = 0.03;
@@ -395,4 +394,3 @@
       
       return html;
     }
-  
