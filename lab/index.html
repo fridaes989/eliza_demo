@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>投資組合回測 - 可編輯 + 回測比較</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <link rel="stylesheet" href="src/style.css">
+  <script src="src/script.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>投資組合回測</h1>
+      <div class="tab-buttons">
+        <button class="tab-button active" data-portfolio="全天候策略">全天候策略</button>
+        <button class="tab-button" data-portfolio="三基金組合">三基金組合</button>
+        <button class="tab-button" data-portfolio="積極型股債組合">積極型股債組合</button>
+      </div>
+    </div>
+
+    <!-- Middle: Allocation + Metrics -->
+    <div class="two-column">
+      <!-- Metrics + Inputs（moved up for mobile visibility） -->
+      <div class="performance-section">
+        <div class="performance-row">
+          <div class="card dark1">
+            <div class="metric-label">報酬</div>
+            <div class="metric-card">
+              <div class="metric-label">年化報酬率（估）</div>
+              <div class="metric-value" id="annualReturn">7.8%</div>
+            </div>
+            <div class="metric-card" style="margin-top:12px;">
+              <div class="metric-label">總報酬率（估）</div>
+              <div class="metric-value" id="totalReturnPct">0.0%</div>
+            </div>
+          </div>
+          <div class="card dark1">
+            <div class="metric-label">風險（估）</div>
+            <div class="metric-card">
+              <div class="metric-label">年化波動率</div>
+              <div class="metric-value" id="volatility">9.2%</div>
+            </div>
+            <div class="metric-card" style="margin-top:8px;">
+              <div class="metric-label">最大回撤</div>
+              <div class="metric-value" id="maxDrawdown">-28.0%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 參數設定（上移，手機/平板免捲動可見） -->
+        <div class="input-section">
+          <h3 class="chart-title">投資參數設定</h3>
+          <div class="input-grid">
+            <div class="input-group">
+              <label>初期投入</label>
+              <input type="number" id="initial" value="100000" min="0" />
+            </div>
+            <div class="input-group">
+              <label>每月定投</label>
+              <input type="number" id="monthly" value="10000" min="0" />
+            </div>
+            <div class="input-group">
+              <label>目標金額</label>
+              <input type="number" id="target" value="1000000" min="0" />
+            </div>
+          </div>
+
+          <div class="summary-cards">
+            <div class="summary-card invested">
+              <div class="summary-label">累積投資金額</div>
+              <div class="summary-value" id="totalInvested">1.2M</div>
+            </div>
+            <div class="summary-card total">
+              <div class="summary-label">預估資產總額</div>
+              <div class="summary-value highlight" id="totalValue">2.16M</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Editable Allocation（moved below visually） -->
+      <div class="card">
+        <h2 class="chart-title">組成標的與比例（可編輯）</h2>
+        <div id="allocationGrid" class="allocation-grid"></div>
+        <div id="allocationTotal" class="total-allocation">合計：0%</div>
+      </div>
+    </div>
+
+    <!-- Historical Backtesting vs S&P500 (moved here) -->
+    <div class="card dark2">
+      <div class="inline-controls" style="justify-content:space-between; margin-bottom:8px;">
+        <div class="inline-controls">
+          <div class="chart-title">歷史回測（與 S&P 500 比較）</div>
+          <button class="chip backtest-years active" data-years="3">近 3 年</button>
+          <button class="chip backtest-years" data-years="5">近 5 年</button>
+          <button class="chip backtest-years" data-years="10">近 10 年</button>
+        </div>
+        <div class="switch" title="股利處理方式">
+          <label style="font-size:12px; opacity:.8;">股利處理：</label>
+          <label><input type="radio" name="divMode" value="drip" checked> DRIP（股利再投入）</label>
+          <label><input type="radio" name="divMode" value="cash"> 現金發放</label>
+        </div>
+      </div>
+      <div class="chart-container backtest-container">
+        <canvas id="backtestChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Time horizon for projection (kept) -->
+    <div class="inline-controls" style="gap:8px;">
+      <div class="chart-title">投資曲線期間</div>
+      <button class="chip horizon-years" data-years="3">3 年</button>
+      <button class="chip horizon-years" data-years="5">5 年</button>
+      <button class="chip horizon-years active" data-years="10">10 年</button>
+      <button class="chip horizon-years" data-years="20">20 年</button>
+    </div>
+
+    <!-- Single Portfolio Chart -->
+    <div class="card">
+      <h3 class="chart-title">投資曲線（<span id="currentPortfolioName">全天候策略</span>）</h3>
+      <div class="chart-container">
+        <canvas id="portfolioChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Three Portfolio Comparison Chart -->
+    <div class="card">
+      <h3 class="chart-title">三種組合比較（相同投資參數）</h3>
+      <div class="chart-container">
+        <canvas id="comparisonChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
