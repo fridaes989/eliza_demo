@@ -38,7 +38,7 @@
       if(priceCache[symbol]) return priceCache[symbol];
       const stooqCode = symbolToStooq[symbol];
       if(!stooqCode) return [];
-      const url = `https://cors-anywhere.herokuapp.com/https://stooq.com/q/d/l/?s=${stooqCode}&i=m`;
+      const url = `https://api.allorigins.win/get?url=https://stooq.com/q/d/l/?s=${stooqCode}&i=m`;
       const resp = await fetch(url, { cache:'no-store' });
       if(!resp.ok){
         console.warn('Failed to fetch', symbol, resp.status);
