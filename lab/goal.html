@@ -19,7 +19,6 @@
   <div class="container">
     <h1>墨鏡姐複利樹 - 財務規劃工具</h1>
 
-    <!-- Step 1 -->
     <div class="step" id="step1">
       <h2>基本設定</h2>
       <div class="form-group">
@@ -34,23 +33,23 @@
       </div>
       <div class="form-group">
         <label>目前年齡：</label>
-        <input type="number" id="currentAge" min="18" max="100" placeholder="請輸入您的年齡">
+        <input type="number" id="currentAge" min="18" max="100" placeholder="請輸入您的年齡" value="25">
       </div>
       <div class="form-group">
         <label id="targetAgeLabel">預計退休年齡：</label>
-        <input type="number" id="retireAge" min="20" max="100" placeholder="請輸入目標年齡">
+        <input type="number" id="retireAge" min="20" max="100" placeholder="請輸入目標年齡" value="65">
       </div>
       <div class="form-group">
         <label id="targetAmountLabel">每月期望退休被動收入(萬元)：</label>
-        <input type="number" id="monthlyIncome" step="0.1" placeholder="例如：10">
+        <input type="number" id="monthlyIncome" step="0.1" placeholder="例如：10" value="8">
       </div>
       <div class="form-group">
         <label>當前總資產(萬元)：</label>
-        <input type="number" id="currentAssets" step="0.1" placeholder="例如：50">
+        <input type="number" id="currentAssets" step="0.1" placeholder="例如：50" value="100">
       </div>
       <div class="form-group">
         <label>每月投資金額(萬元)：</label>
-        <input type="number" id="monthlyInvestment" step="0.1" placeholder="例如：3">
+        <input type="number" id="monthlyInvestment" step="0.1" placeholder="例如：3" value="2">
       </div>
       <div class="form-group">
         <label>選擇投資策略：</label>
@@ -64,7 +63,7 @@
       </div>
       <button id="calculateBtn">開始計算</button>
     </div>
-
+    
     <!-- Results Section -->
     <div class="results-section hidden" id="results">
       <h2 id="resultsTitle">財務規劃分析結果</h2>
