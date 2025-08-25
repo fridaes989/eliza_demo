@@ -1,540 +1,152 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
-  <title>投資組合回測 - 積極型股債組合</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-  <link rel="stylesheet" href="src/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>積極型股債組合回測 - 墨鏡姐複利樹</title>
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3.4.0/dist/vuetify.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="src/style.css">
 </head>
+
 <body>
-  <div class="container">
-    <div class="header">
-      <h1>投資組合回測</h1>
-      <div class="tab-buttons">
-        <a href="all_weather.html" class="tab-button">全天候策略</a>
-        <a href="classic3.html" class="tab-button">三基金組合</a>
-        <a href="aggressive.html" class="tab-button active">積極型股債組合</a>
-      </div>
+    <div id="app">
+        <v-app :theme="theme">
+            <v-main>
+                <v-container>
+                    <v-row justify="center">
+                        <v-col cols="12" md="11" lg="10">
+                            <v-toolbar color="transparent">
+                                <v-toolbar-title class="text-h5 font-weight-bold text-primary">墨鏡姐複利樹</v-toolbar-title>
+                                <v-spacer></v-spacer>
+                                <v-btn text href="goal.html">財務規劃</v-btn>
+                                <v-btn text href="all_weather.html">全天候策略</v-btn>
+                                <v-btn text href="classic3.html">三基金組合</v-btn>
+                                <v-btn text href="aggressive.html" variant="tonal" color="primary">積極型股債組合</v-btn>
+                            </v-toolbar>
+
+                            <v-card class="mt-4" flat color="transparent">
+                               <v-card-text>
+                                <v-col cols="12" md="5">
+                                  <h1>積極型股債組合</h1>
+                                </v-col>
+                                 <v-row>
+                                  
+                                    <!-- Performance & Allocation -->
+                                    <v-col cols="12" md="5">
+                                        <v-row>
+                                            <v-col cols="12">
+                                                <v-card>
+                                                    <v-card-title>績效表現</v-card-title>
+                                                    <v-row dense class="pa-2">
+                                                        <v-col cols="12" sm="6"><v-card color="surface-variant" flat><v-card-text><div class="text-caption">年化報酬率 (估)</div><div class="text-h5 font-weight-bold text-primary">{{ pct(portfolio.data.CAGR) }}</div></v-card-text></v-card></v-col>
+                                                        <v-col cols="12" sm="6"><v-card color="surface-variant" flat><v-card-text><div class="text-caption">年化波動率</div><div class="text-h5 font-weight-bold">{{ pct(portfolio.data.volatility) }}</div></v-card-text></v-card></v-col>
+                                                        <v-col cols="12"><v-card color="surface-variant" flat><v-card-text><div class="text-caption">最大回撤</div><div class="text-h5 font-weight-bold text-error">{{ pct(portfolio.data.maxDrawdown) }}</div></v-card-text></v-card></v-col>
+                                                    </v-row>
+                                                </v-card>
+                                            </v-col>
+                                            <v-col cols="12">
+                                                <v-card>
+                                                    <v-card-title>組成標的與比例</v-card-title>
+                                                    <v-card-text>
+                                                        <div class="pie-chart-container"><canvas id="pie-chart"></canvas></div>
+                                                        <v-row dense class="mt-4">
+                                                            <v-col v-for="(percent, asset) in portfolio.data.allocations" :key="asset" cols="12" sm="6">
+                                                                <div class="legend-item">
+                                                                    <div class="legend-color" :style="{ backgroundColor: pieColors[Object.keys(portfolio.data.allocations).indexOf(asset)] }"></div>
+                                                                    <div>{{ asset }}: {{ percent }}%</div>
+                                                                </div>
+                                                            </v-col>
+                                                        </v-row>
+                                                    </v-card-text>
+                                                </v-card>
+                                            </v-col>
+                                        </v-row>
+                                    </v-col>
+                                    <!-- Backtest & Projection -->
+                                    <v-col cols="12" md="7">
+                                        <v-card class="h-100">
+                                            <v-card-title>歷史回測 (與 S&P 500 比較)</v-card-title>
+                                            <v-card-text>
+                                                <v-chip-group v-model="backtestYears" mandatory color="primary">
+                                                    <v-chip :value="3">近 3 年</v-chip>
+                                                    <v-chip :value="5">近 5 年</v-chip>
+                                                    <v-chip :value="10">近 10 年</v-chip>
+                                                </v-chip-group>
+                                                <div style="height: 380px;"><canvas id="backtest-chart"></canvas></div>
+                                            </v-card-text>
+                                        </v-card>
+                                    </v-col>
+                                    <v-col cols="12">
+                                        <v-card>
+                                            <v-card-title>投資成長曲線</v-card-title>
+                                            <v-card-text>
+                                                <v-row align="center" dense>
+                                                    <v-col cols="12" sm="4" md="2"><v-text-field v-model.number="form.initial" label="初期投入" type="number" variant="outlined" dense hide-details></v-text-field></v-col>
+                                                    <v-col cols="12" sm="4" md="2"><v-text-field v-model.number="form.monthly" label="每月定投" type="number" variant="outlined" dense hide-details></v-text-field></v-col>
+                                                    <v-col cols="12" sm="4" md="8">
+                                                        <v-chip-group v-model="projectionYears" mandatory color="primary">
+                                                            <v-chip :value="3">3 年</v-chip> <v-chip :value="5">5 年</v-chip> <v-chip :value="10">10 年</v-chip> <v-chip :value="20">20 年</v-chip>
+                                                        </v-chip-group>
+                                                    </v-col>
+                                                </v-row>
+                                                <v-row class="mt-4" dense>
+                                                    <v-col cols="12" sm="6"><v-card color="secondary" flat><v-card-text><div class="text-caption">累積投資金額</div><div class="text-h5 font-weight-bold">{{ formatK(projectionResult.invested) }}</div></v-card-text></v-card></v-col>
+                                                    <v-col cols="12" sm="6"><v-card color="primary" flat><v-card-text><div class="text-caption">預估資產總額</div><div class="text-h5 font-weight-bold">{{ formatK(projectionResult.value) }}</div></v-card-text></v-card></v-col>
+                                                </v-row>
+                                                <div style="height: 300px; margin-top: 16px;"><canvas id="projection-chart"></canvas></div>
+                                            </v-card-text>
+                                        </v-card>
+                                    </v-col>
+                                 </v-row>
+                               </v-card-text>
+                            </v-card>
+                        </v-col>
+                    </v-row>
+                </v-container>
+            </v-main>
+        </v-app>
     </div>
 
-    <div class="two-column">
-      <div class="performance-section row">
-        <div class="performance-row col-12">
-          <div class="card dark1 col-6">
-            <div class="metric-label">報酬</div>
-            <div class="metric-card">
-              <div class="metric-label">年化報酬率（估）</div>
-              <div class="metric-value" id="annualReturn">9.5%</div>
-            </div>
-            <div class="metric-card" style="margin-top:12px;">
-              <div class="metric-label">總報酬率（估）</div>
-              <div class="metric-value" id="totalReturnPct">0.0%</div>
-            </div>
-          </div>
-          <div class="card dark1 col-6">
-            <div class="metric-label">風險（估）</div>
-            <div class="metric-card">
-              <div class="metric-label">年化波動率</div>
-              <div class="metric-value" id="volatility">13.2%</div>
-            </div>
-            <div class="metric-card" style="margin-top:8px;">
-              <div class="metric-label">最大回撤</div>
-              <div class="metric-value" id="maxDrawdown">-40.0%</div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3.4.0/dist/vuetify.min.js"></script>
+    <script>
+        const { createApp, ref, watch, onMounted, nextTick } = Vue;
+        const { createVuetify } = Vuetify;
 
-      <div class="card">
-        <h2 class="chart-title">組成標的與比例</h2>
-        <div class="allocation-display">
-          <div class="pie-chart-container">
-            <canvas id="pieChart"></canvas>
-          </div>
-          <div id="allocationLegend" class="allocation-legend"></div>
-        </div>
-      </div>
-    </div>
+        const customDarkTheme = { dark: true, colors: { background: '#0D0D0D', surface: 'rgba(0, 0, 0, .1)', 'surface-variant': 'rgba(0, 0, 0, .2)', primary: '#208065', secondary: '#806420', error: '#CF6679' } };
+        const vuetify = createVuetify({ theme: { defaultTheme: 'dark', themes: { dark: customDarkTheme } } });
 
-    <div class="card dark2">
-      <div class="inline-controls" style="justify-content:space-between; margin-bottom:8px;">
-        <div class="inline-controls">
-          <div class="chart-title">歷史回測（與 S&P 500 比較）</div>
-          <button class="chip backtest-years active" data-years="3">近 3 年</button>
-          <button class="chip backtest-years" data-years="5">近 5 年</button>
-          <button class="chip backtest-years" data-years="10">近 10 年</button>
-        </div>
-        <div class="switch" title="股利處理方式">
-          <label style="font-size:12px; opacity:.8;">股利處理：</label>
-          <label><input type="radio" name="divMode" value="drip" checked> DRIP（股利再投入）</label>
-          <label><input type="radio" name="divMode" value="cash"> 現金發放</label>
-        </div>
-      </div>
-      <div class="chart-container backtest-container">
-        <canvas id="backtestChart"></canvas>
-      </div>
-    </div>
+        createApp({
+            setup() {
+                const theme = ref('dark');
+                const portfolio = { name: "積極型股債組合", data: { allocations: { VT: 80, BNDW: 20 }, CAGR: 0.095, volatility: 0.132, maxDrawdown: -0.40 } };
+                const csvData = `date,portfolio_monthly_return,portfolio_value,sp500_value\n2018-09,0.0,10000,10000\n2018-10,-6.317512,9368,9309\n2018-11,1.4886,9508,9481\n2018-12,-5.492364,8986,8646\n2019-01,6.605953,9579,9338\n2019-02,2.266411,9796,9642\n2019-03,1.232524,9917,9815\n2019-04,2.773613,10192,10217\n2019-05,-4.456666,9738,9565\n2019-06,5.380047,10262,10231\n2019-07,0.142573,10276,10385\n2019-08,-1.195523,10153,10212\n2019-09,1.700934,10326,10410\n2019-10,2.21261,10555,10640\n2019-11,2.009083,10767,11025\n2019-12,2.722979,11060,11346\n2020-01,-0.861698,10965,11341\n2020-02,-5.545945,10356,10444\n2020-03,-12.154881,9098,9140\n2020-04,8.65426,9885,10300\n2020-05,4.263358,10306,10791\n2020-06,2.584075,10573,10982\n2020-07,4.464509,11045,11629\n2020-08,4.636744,11557,12441\n2020-09,-2.289037,11292,11975\n2020-10,-1.672429,11103,11676\n2020-11,10.068498,12221,12946\n2020-12,3.974669,12707,13426\n2021-01,-0.332697,12665,13289\n2021-02,1.769138,12889,13659\n2021-03,2.19621,13172,14279\n2021-04,3.354664,13614,15035\n2021-05,1.284875,13789,15133\n2021-06,1.057743,13935,15473\n2021-07,0.741114,14038,15850\n2021-08,1.740911,14282,16322\n2021-09,-3.507694,13781,15561\n2021-10,4.045578,14339,16653\n2-11,-1.954148,14059,16519\n2021-12,2.938678,14472,17283\n2022-01,-4.013946,13891,16372\n2022-02,-2.45273,13550,15889\n2022-03,1.013406,13688,16486\n2022-04,-7.182964,12704,15039\n2022-05,0.412172,12757,15073\n2022-06,-6.814404,11887,13830\n2022-07,6.148232,12618,15104\n2022-08,-3.897756,12126,14488\n2022-09,-8.340167,11115,13148\n2022-10,4.974259,11668,14217\n2022-11,7.277363,12517,15008\n2022-12,-3.964138,12021,14143\n2023-01,6.680477,12824,15032\n2023-02,-3.007823,12438,14654\n2023-03,2.499771,12749,15197\n2023-04,1.183074,12900,15440\n2023-05,-1.102514,12758,15512\n2023-06,4.010855,13270,16517\n2023-07,2.901932,13655,17057\n2023-08,-2.350871,13334,16780\n2023-09,-4.184046,12776,15984\n2023-10,-2.552329,12450,15637\n2023-11,7.945186,13439,17066\n2023-12,3.808067,13951,17845\n2024-01,-0.09568,13937,18129\n2024-02,3.36637,14406,19075\n2024-03,2.382338,14750,19699\n2024-04,-3.295477,14263,18904\n2024-05,2.566814,14630,19861\n2024-06,2.198283,14951,20561\n2024-07,1.972183,15246,20810\n2024-08,2.025305,15555,21297\n2024-09,1.68196,15816,21744\n2024-10,-2.132408,15479,21550\n2024-11,3.533217,16026,22835\n2024-12,-3.443172,15474,22286\n2025-01,2.520929,15864,22884\n2025-02,-0.061578,15855,22594\n2025-03,-3.226892,15343,21335\n2025-04,0.59961,15435,21150\n2025-05,4.506472,16131,22479\n2025-06,3.478981,16692,23564\n2025-07,0.796911,16825,24107\n2025-08,1.720603,17114,24337`;
+                const backtestData = ref([]);
+                const backtestYears = ref(3);
+                const projectionYears = ref(10);
+                const form = ref({ initial: 100000, monthly: 10000 });
+                const projectionResult = ref({ invested: 0, value: 0 });
+                const pieColors = ['#208065', '#40A080', '#60C0A0', '#80E0C0', '#A0FFA0', '#806420'];
+                const charts = {};
 
-    <div class="two-column">
-      <div class="input-section">
-        <h3 class="chart-title">投資參數設定</h3>
-        <div class="input-grid">
-          <div class="input-group">
-            <label>初期投入</label>
-            <input type="number" id="initial" value="100000" min="0" />
-          </div>
-          <div class="input-group">
-            <label>每月定投</label>
-            <input type="number" id="monthly" value="10000" min="0" />
-          </div>
-          <div class="input-group">
-            <label>目標金額</label>
-            <input type="number" id="target" value="1000000" min="0" />
-          </div>
-        </div>
-        
-        <div class="inline-controls" style="gap:8px;">
-          <div class="chart-title">投資曲線期間</div>
-          <button class="chip horizon-years" data-years="3">3 年</button>
-          <button class="chip horizon-years" data-years="5">5 年</button>
-          <button class="chip horizon-years active" data-years="10">10 年</button>
-          <button class="chip horizon-years" data-years="20">20 年</button>
-        </div>
+                const parseCSV = (csv) => { const lines = csv.trim().split('\n'); const headers = lines.shift().split(','); return lines.map(line => { const values = line.split(','); const entry = {}; headers.forEach((h, i) => { entry[h.trim()] = isNaN(Number(values[i])) ? values[i] : Number(values[i]); }); return entry; }); };
+                const createOrUpdateChart = (id, config) => { if (charts[id]) { charts[id].data = config.data; charts[id].options = config.options; charts[id].update(); } else { const ctx = document.getElementById(id)?.getContext('2d'); if (ctx) charts[id] = new Chart(ctx, config); } };
+                const drawPieChart = () => createOrUpdateChart('pie-chart', { type: 'doughnut', data: { labels: Object.keys(portfolio.data.allocations), datasets: [{ data: Object.values(portfolio.data.allocations), backgroundColor: pieColors, borderWidth: 2, borderColor: '#0D0D0D' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+                const drawBacktestChart = () => { const slicedData = backtestData.value.slice(-(backtestYears.value * 12)); createOrUpdateChart('backtest-chart', { type: 'line', data: { labels: slicedData.map(d => d.date), datasets: [{ label: portfolio.name, data: slicedData.map(d => d.portfolio_value), borderColor: '#208065', tension: 0.1, pointRadius: 0 }, { label: 'S&P 500', data: slicedData.map(d => d.sp500_value), borderColor: '#806420', tension: 0.1, pointRadius: 0 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: '#FFF' } }, y: { ticks: { color: '#FFF', callback: v => formatK(v) } } }, plugins: { legend: { labels: { color: '#FFF' } } } } }); };
+                const drawProjectionChart = () => { const { data, invested, value } = buildProjectionSeries(); projectionResult.value = { invested, value }; createOrUpdateChart('projection-chart', { type: 'line', data: { labels: data.map(d => d.year), datasets: [{ label: '累積投入', data: data.map(d => d.invested), borderColor: '#806420', backgroundColor: 'rgba(128, 100, 32, 0.2)', fill: true, tension: 0.1 }, { label: '資產總額', data: data.map(d => d.value), borderColor: '#208065', backgroundColor: 'rgba(32, 128, 101, 0.2)', fill: true, tension: 0.1 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: '#FFF' } }, y: { ticks: { color: '#FFF', callback: v => formatK(v) } } }, plugins: { legend: { labels: { color: '#FFF' } } } } }); };
+                const buildProjectionSeries = () => { const { initial, monthly } = form.value; const data = []; let invested = initial, value = initial; const r = Math.pow(1 + portfolio.data.CAGR, 1 / 12) - 1; for (let y = 1; y <= projectionYears.value; y++) { for (let i = 0; i < 12; i++) { value = (value + monthly) * (1 + r); invested += monthly; } data.push({ year: `${y}年`, invested: Math.round(invested), value: Math.round(value) }); } return { data, invested, value }; };
+                const formatK = (num) => { if (Math.abs(num) >= 1e6) return (num / 1e6).toFixed(2) + 'M'; if (Math.abs(num) >= 1e3) return (num / 1e3).toFixed(1) + 'K'; return num.toLocaleString(); };
+                const pct = (n) => (n * 100).toFixed(1) + '%';
+                
+                watch(backtestYears, drawBacktestChart);
+                watch([form, projectionYears], drawProjectionChart, { deep: true });
+                onMounted(() => { backtestData.value = parseCSV(csvData); nextTick(() => { drawPieChart(); drawBacktestChart(); drawProjectionChart(); }); });
 
-        <div class="summary-cards">
-          <div class="summary-card invested">
-            <div class="summary-label">累積投資金額</div>
-            <div class="summary-value" id="totalInvested">1.2M</div>
-          </div>
-          <div class="summary-card total">
-            <div class="summary-label">預估資產總額</div>
-            <div class="summary-value highlight" id="totalValue">2.16M</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3 class="chart-title">投資曲線（<span id="currentPortfolioName">積極型股債組合</span>）</h3>
-      <div class="chart-container">
-        <canvas id="portfolioChart"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // ===== START: Real backtest data from CSV =====
-    const csvData = `date,portfolio_monthly_return,portfolio_value,sp500_value
-2018-09,0.0,10000,10000
-2018-10,-6.317512,9368,9309
-2018-11,1.4886,9508,9481
-2018-12,-5.492364,8986,8646
-2019-01,6.605953,9579,9338
-2019-02,2.266411,9796,9642
-2019-03,1.232524,9917,9815
-2019-04,2.773613,10192,10217
-2019-05,-4.456666,9738,9565
-2019-06,5.380047,10262,10231
-2019-07,0.142573,10276,10385
-2019-08,-1.195523,10153,10212
-2019-09,1.700934,10326,10410
-2019-10,2.21261,10555,10640
-2019-11,2.009083,10767,11025
-2019-12,2.722979,11060,11346
-2020-01,-0.861698,10965,11341
-2020-02,-5.545945,10356,10444
-2020-03,-12.154881,9098,9140
-2020-04,8.65426,9885,10300
-2020-05,4.263358,10306,10791
-2020-06,2.584075,10573,10982
-2020-07,4.464509,11045,11629
-2020-08,4.636744,11557,12441
-2020-09,-2.289037,11292,11975
-2020-10,-1.672429,11103,11676
-2020-11,10.068498,12221,12946
-2020-12,3.974669,12707,13426
-2021-01,-0.332697,12665,13289
-2021-02,1.769138,12889,13659
-2021-03,2.19621,13172,14279
-2021-04,3.354664,13614,15035
-2021-05,1.284875,13789,15133
-2021-06,1.057743,13935,15473
-2021-07,0.741114,14038,15850
-2021-08,1.740911,14282,16322
-2021-09,-3.507694,13781,15561
-2021-10,4.045578,14339,16653
-2021-11,-1.954148,14059,16519
-2021-12,2.938678,14472,17283
-2022-01,-4.013946,13891,16372
-2022-02,-2.45273,13550,15889
-2022-03,1.013406,13688,16486
-2022-04,-7.182964,12704,15039
-2022-05,0.412172,12757,15073
-2022-06,-6.814404,11887,13830
-2022-07,6.148232,12618,15104
-2022-08,-3.897756,12126,14488
-2022-09,-8.340167,11115,13148
-2022-10,4.974259,11668,14217
-2022-11,7.277363,12517,15008
-2022-12,-3.964138,12021,14143
-2023-01,6.680477,12824,15032
-2023-02,-3.007823,12438,14654
-2023-03,2.499771,12749,15197
-2023-04,1.183074,12900,15440
-2023-05,-1.102514,12758,15512
-2023-06,4.010855,13270,16517
-2023-07,2.901932,13655,17057
-2023-08,-2.350871,13334,16780
-2023-09,-4.184046,12776,15984
-2023-10,-2.552329,12450,15637
-2023-11,7.945186,13439,17066
-2023-12,3.808067,13951,17845
-2024-01,-0.09568,13937,18129
-2024-02,3.36637,14406,19075
-2024-03,2.382338,14750,19699
-2024-04,-3.295477,14263,18904
-2024-05,2.566814,14630,19861
-2024-06,2.198283,14951,20561
-2024-07,1.972183,15246,20810
-2024-08,2.025305,15555,21297
-2024-09,1.68196,15816,21744
-2024-10,-2.132408,15479,21550
-2024-11,3.533217,16026,22835
-2024-12,-3.443172,15474,22286
-2025-01,2.520929,15864,22884
-2025-02,-0.061578,15855,22594
-2025-03,-3.226892,15343,21335
-2025-04,0.59961,15435,21150
-2025-05,4.506472,16131,22479
-2025-06,3.478981,16692,23564
-2025-07,0.796911,16825,24107
-2025-08,1.720603,17114,24337
-`;
-    let backtestData = [];
-
-    function parseCSV(csvString) {
-      const lines = csvString.trim().split('\n');
-      const headers = lines.shift().split(',');
-      return lines.map(line => {
-        const values = line.split(',');
-        const entry = {};
-        headers.forEach((header, index) => {
-          const key = header.trim();
-          const value = values[index].trim();
-          entry[key] = isNaN(Number(value)) ? value : Number(value);
-        });
-        return entry;
-      });
-    }
-
-    function getRealBacktestData(years) {
-      const months = years * 12;
-      const slicedData = backtestData.slice(-months);
-
-      const labels = slicedData.map(d => d.date);
-      const pSeries = slicedData.map(d => d.portfolio_value);
-      const sSeries = slicedData.map(d => d.sp500_value);
-      
-      return { labels, pSeries, sSeries };
-    }
-    // ===== END: Real backtest data from CSV =====
-
-    // ===== Base data =====
-    const portfolios = {
-      "全天候策略": { allocations: { VTI: 30, TLT: 40, IEF: 15, GLD: 7.5, GSG: 7.5 }, CAGR: 0.078, volatility: 0.092, maxDrawdown: -0.28 },
-      "三基金組合": { allocations: { VTI: 42, VXUS: 18, BND: 40 }, CAGR: 0.081, volatility: 0.105, maxDrawdown: -0.33 },
-      "積極型股債組合": { allocations: { VT: 80, BNDW: 20 }, CAGR: 0.095, volatility: 0.132, maxDrawdown: -0.40 }
-    };
-
-    // Current portfolio for this page
-    const selectedPortfolio = "積極型股債組合";
-    let currentAllocations = { ...portfolios[selectedPortfolio].allocations };
-    
-    // Assumptions for editable weighting math (rough long-run estimates)
-    const assetAssumptions = {
-      VTI:{ ret:0.10, yield:0.015, vol:0.16 },
-      VXUS:{ ret:0.07, yield:0.025, vol:0.17 },
-      BND:{ ret:0.04, yield:0.030, vol:0.05 },
-      TLT:{ ret:0.03, yield:0.025, vol:0.18 },
-      IEF:{ ret:0.025, yield:0.025, vol:0.08 },
-      GLD:{ ret:0.06, yield:0.000, vol:0.20 },
-      DBC:{ ret:0.03, yield:0.000, vol:0.25 },
-      GSG:{ ret:0.03, yield:0.000, vol:0.25 },
-      VT:{ ret:0.085, yield:0.020, vol:0.17 },
-      BNDW:{ ret:0.04, yield:0.027, vol:0.06 }
-    };
-
-    // State
-    let years = 10;
-    let backtestYears = 3;
-    let divMode = 'drip';
-    let initial = 100000;
-    let monthly = 10000;
-    let target = 1000000;
-
-    let portfolioChart=null, backtestChart=null, pieChart = null;
-
-    // Chart colors
-    const pieColors = [
-      '#208065', '#40A080', '#60C0A0', '#80E0C0', '#A0FFA0',
-      '#806420', '#A08040', '#C0A060', '#E0C080', '#FFFF80'
-    ];
-
-    // ===== Chart.js global options =====
-    Chart.defaults.elements.point.radius = 2;
-    Chart.defaults.elements.point.hoverRadius = 3;
-    Chart.defaults.animation = { duration: 200, easing: 'linear' };
-    Chart.defaults.animations = { colors: { type: 'color', duration: 200, easing: 'linear' } };
-    if(Chart.defaults.elements && Chart.defaults.elements.line){ Chart.defaults.elements.line.tension = 0; }
-
-    // ===== Helpers =====
-    function formatK(num){
-      if(Math.abs(num) >= 1_000_000) return (num/1_000_000).toFixed(2).replace(/\.00$/,'') + 'M';
-      if(Math.abs(num) >= 1_000) return (num/1_000).toFixed(1).replace(/\.0$/,'') + 'K';
-      return num.toLocaleString();
-    }
-    function pct(n){ return (n*100).toFixed(1) + '%'; }
-
-    function monthlyRate(annual){ return Math.pow(1+annual, 1/12) - 1; }
-
-    // ===== Pie Chart Functions =====
-    function initializePieChart() {
-      const ctx = document.getElementById('pieChart').getContext('2d');
-      
-      if (pieChart) {
-        pieChart.destroy();
-      }
-      
-      pieChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: [],
-          datasets: [{
-            data: [],
-            backgroundColor: pieColors,
-            borderWidth: 2,
-            borderColor: '#ffffff'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          plugins: {
-            legend: {
-              display: false
+                return { theme, portfolio, backtestYears, projectionYears, form, projectionResult, pieColors, formatK, pct };
             }
-          }
-        }
-      });
-    }
-
-    function updatePieChart(allocations) {
-      if (!pieChart) return;
-      
-      const labels = [];
-      const data = [];
-      const legendContainer = document.getElementById('allocationLegend');
-      legendContainer.innerHTML = '';
-      
-      let colorIndex = 0;
-      for (const [asset, percentage] of Object.entries(allocations)) {
-        if (percentage > 0) {
-          labels.push(asset);
-          data.push(percentage);
-          
-          // Create legend item
-          const legendItem = document.createElement('div');
-          legendItem.className = 'legend-item';
-          legendItem.innerHTML = `
-            <div class="legend-color" style="background-color: ${pieColors[colorIndex]}"></div>
-            <div class="legend-text">${asset}: ${percentage}%</div>
-          `;
-          legendContainer.appendChild(legendItem);
-          
-          colorIndex++;
-        }
-      }
-      
-      pieChart.data.labels = labels;
-      pieChart.data.datasets[0].data = data;
-      pieChart.update();
-    }
-
-    // ===== Calculations =====
-    function buildProjectionSeries(years, initial, monthly, annualReturn){
-      const data=[]; 
-      let invested=initial, value=initial; 
-      const m = monthly; 
-      const r = monthlyRate(annualReturn);
-      let targetYear=null;
-      
-      for(let y=1;y<=years;y++){
-        for(let i=0;i<12;i++){
-          value = (value + m) * (1+r);
-          invested += m;
-        }
-        if(!targetYear && value >= target) targetYear = y;
-        data.push({ year:`${y}年`, invested:Math.round(invested), value:Math.round(value) });
-      }
-      return { data, invested, value, targetYear };
-    }
-
-    // ===== Charts =====
-    function updatePortfolioChart(data){
-      const ctx = document.getElementById('portfolioChart').getContext('2d');
-      if(portfolioChart) portfolioChart.destroy();
-      portfolioChart = new Chart(ctx, {
-        type:'line',
-        data:{
-          labels: data.map(d=>d.year),
-          datasets:[
-            { label:'累積投入金額', data:data.map(d=>d.invested), borderColor:'#2aa27f', backgroundColor:'rgba(21,90,71,.20)', fill:true, tension:.1 },
-            { label:'累積總資產', data:data.map(d=>d.value), borderColor:'#5bc7a7', backgroundColor:'rgba(32,128,100,.25)', fill:true, tension:.1 }
-          ]
-        },
-        options:{
-          responsive:true, maintainAspectRatio:false,
-          plugins:{ legend:{ labels:{ color:'#fff' } } },
-          interaction:{ mode:'index', intersect:false },
-          scales:{
-            x:{ ticks:{ color:'#fff' }, grid:{ color:'rgba(255,255,255,.1)' } },
-            y:{ ticks:{ color:'#fff', callback:v=>formatK(v) }, grid:{ color:'rgba(255,255,255,.1)' } }
-          }
-        }
-      });
-    }
-
-    function updateBacktestChart(){
-      const ctx = document.getElementById('backtestChart').getContext('2d');
-      if(backtestChart) backtestChart.destroy();
-
-      // Get real data based on selected years
-      const data = getRealBacktestData(backtestYears);
-      const xLabels = data.labels;
-      
-      const tickFontSize = window.innerWidth < 768 ? 10 : 12;
-
-      backtestChart = new Chart(ctx, {
-        type:'line',
-        data:{
-          labels:xLabels,
-          datasets:[
-            { label: selectedPortfolio, data:data.pSeries, borderColor:'#5bc7a7', backgroundColor:'rgba(32,128,100,0)', fill:false, tension:0 },
-            { label:'S&P 500', data:data.sSeries, borderColor:'#FFD700', backgroundColor:'rgba(255,215,0,0)', fill:false, tension:0 }
-          ]
-        },
-        options:{
-          responsive:true, maintainAspectRatio:false,
-          plugins:{ legend:{ labels:{ color:'#fff' } } },
-          interaction:{ mode:'index', intersect:false },
-          scales:{
-            x:{
-              ticks:{
-                color:'#fff',
-                autoSkip:true,
-                maxTicksLimit: Math.min(12, backtestYears*4), // Show more ticks
-                font: { size: tickFontSize },
-                callback: function(value){
-                  const raw = xLabels[value];
-                  if(typeof raw === 'string' && raw.includes('-')){
-                    const [y,m] = raw.split('-');
-                    // Show label for Jan, Apr, Jul, Oct
-                    if (parseInt(m) % 3 === 1) {
-                        return `${y}/${m}`;
-                    }
-                    return null; // Hide other labels
-                  }
-                  return raw;
-                }
-              },
-              grid:{ color:'rgba(255,255,255,.08)' }
-            },
-            y:{ ticks:{ color:'#fff', callback:v=>formatK(v) }, grid:{ color:'rgba(255,255,255,.08)' } }
-          }
-        }
-      });
-    }
-
-
-    // ===== Update flows =====
-    function updatePerformanceFromWeights(){
-      const portfolio = portfolios[selectedPortfolio];
-      document.getElementById('annualReturn').textContent = pct(portfolio.CAGR);
-      document.getElementById('volatility').textContent = pct(portfolio.volatility);
-      document.getElementById('maxDrawdown').textContent = (portfolio.maxDrawdown*100).toFixed(1) + '%';
-    }
-
-    function updateProjectionAndSummary(){
-      const portfolio = portfolios[selectedPortfolio];
-      const { data, invested, value } = buildProjectionSeries(years, initial, monthly, portfolio.CAGR + 0.02); // add dividend yield estimate
-
-      document.getElementById('totalInvested').textContent = formatK(invested);
-      document.getElementById('totalValue').textContent = formatK(value);
-      const totalInvestedAmount = initial + monthly * 12 * years;
-      const totalReturnPct = totalInvestedAmount>0 ? ((value-totalInvestedAmount)/totalInvestedAmount)*100 : 0;
-      document.getElementById('totalReturnPct').textContent = totalReturnPct.toFixed(1) + '%';
-
-      document.getElementById('currentPortfolioName').textContent = selectedPortfolio;
-      updatePortfolioChart(data);
-    }
-
-    function updateAllCharts(){
-      updateProjectionAndSummary();
-      updateBacktestChart();
-    }
-
-    // ===== Event wiring =====
-    document.addEventListener('DOMContentLoaded', ()=>{
-      // Parse the embedded CSV data
-      backtestData = parseCSV(csvData);
-
-      // Wait for Chart.js to be fully loaded
-      setTimeout(() => {
-        // Initialize pie chart
-        initializePieChart();
-        updatePieChart(currentAllocations);
-        
-        // Update performance metrics
-        updatePerformanceFromWeights();
-        
-        // Initialize all charts
-        updateAllCharts();
-      }, 100);
-
-      // Horizon buttons for projection
-      document.querySelectorAll('.horizon-years').forEach(btn=>{
-        btn.addEventListener('click', function(){
-          document.querySelectorAll('.horizon-years').forEach(b=>b.classList.remove('active'));
-          this.classList.add('active');
-          years = parseInt(this.getAttribute('data-years'));
-          updateProjectionAndSummary(); // Only update projection chart
-        });
-      });
-
-      // Backtest year chips
-      document.querySelectorAll('.backtest-years').forEach(btn=>{
-        btn.addEventListener('click', function(){
-          document.querySelectorAll('.backtest-years').forEach(b=>b.classList.remove('active'));
-          this.classList.add('active');
-          backtestYears = parseInt(this.getAttribute('data-years'));
-          updateBacktestChart();
-        });
-      });
-
-      // DRIP vs CASH - Note: This switch no longer affects the backtest chart as it uses real, pre-calculated data.
-      document.querySelectorAll('input[name="divMode"]').forEach(r=>{
-        r.addEventListener('change', function(){
-          divMode = this.value;
-          // No need to call updateBacktestChart() as the real data is independent of this setting.
-        });
-      });
-
-      // Inputs
-      document.getElementById('initial').addEventListener('input', function(){ initial = Number(this.value)||0; updateProjectionAndSummary(); });
-      document.getElementById('monthly').addEventListener('input', function(){ monthly = Number(this.value)||0; updateProjectionAndSummary(); });
-      document.getElementById('target').addEventListener('input', function(){ target = Number(this.value)||0; updateProjectionAndSummary(); });
-    });
-  </script>
+        }).use(vuetify).mount('#app');
+    </script>
 </body>
 </html>
