@@ -37,73 +37,134 @@ body {
 }
 
 
-/* Custom Chart Styles for Goal Planner */
+        /* Chart fade animation styles */
+        .chart-container {
+            transition: opacity 0.4s ease-in-out;
+        }
+        
+        .chart-container.fading {
+            opacity: 0;
+        }
+        
+        .chart-card {
+            box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 12px !important;
+        }
+        .v-card-title {
+            font-weight: 700;
+        }
+        
+        .result-highlight {
+            font-size: 1.25rem;
+            color: #48bb78; /* A green color for success */
+        }
+
+/* Custom Chart Styles */
 .bar-chart {
     display: flex;
     flex-direction: column;
-    width: 100%;
     height: 350px;
+    width: 100%;
     position: relative;
-    background-color: #f9fafb;
-    border-radius: 8px;
-    padding: 20px 10px 10px 10px;
-    box-sizing: border-box;
 }
 .bars-container {
     display: flex;
     justify-content: space-around;
     align-items: flex-end;
-    width: 100%;
-    height: 300px;
-    border-bottom: 2px solid #e2e8f0;
+    flex-grow: 1;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     position: relative;
-}
-.goal-line {
-    position: absolute;
-    width: 100%;
-    border-top: 2px dashed #f56565;
-    left: 0;
-    z-index: 100;
-}
-.goal-label {
-    position: absolute;
-    right: 0;
-    background-color: #f56565;
-    color: white;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    transform: translateY(-50%);
-}
-.bar {
-    width: 10%;
-    background: linear-gradient(to top, #208065 0%, #40A080 100%);
-    position: relative;
-    transition: height 0.5s ease-out;
-    border-radius: 4px 4px 0 0;
-}
-.bar-value {
-    position: absolute;
-    top: -22px;
-    width: 100%;
-    text-align: center;
-    font-size: 12px;
-    font-weight: bold;
-    color: #2d3748;
+    padding-top: 30px; /* Space for bar values */
 }
 .labels-container {
     display: flex;
     justify-content: space-around;
-    width: 100%;
-    margin-top: 8px;
+    padding-top: 8px;
+}
+.bar {
+    width: 40px;
+    position: relative;
+    display: flex;
+    flex-direction: column-reverse; /* Stack from bottom */
+    transition: height 0.5s ease-out;
+}
+.bar-value {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: bold;
+    color: #FFFFFF;
 }
 .bar-label {
-    width: 10%;
+    width: 40px;
     text-align: center;
-    font-size: 12px;
-    color: rgb(14, 14, 14);
-    color: rgba(255, 255, 255, .4);
+    font-size: 11px;
+    color: #A0AEC0;
 }
+.goal-line {
+    position: absolute;
+    width: 100%;
+    border-top: 2px dashed #F6E05E; /* A yellow color */
+    left: 0;
+}
+.goal-label {
+    position: absolute;
+    right: 0;
+    top: -22px;
+    background: #F6E05E;
+    color: #1A202C;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.bar-segment {
+    width: 100%;
+    transition: height 0.5s ease-out;
+}
+.investment {
+    background: linear-gradient(to top, #3182ce 0%, #4299e1 100%); /* Blue gradient */
+}
+.growth {
+    background: linear-gradient(to top, #208065 0%, #40A080 100%); /* Green gradient */
+}
+
+/* Tooltip Styles */
+.chart-tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.4;
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+    max-width: 250px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.chart-tooltip.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.chart-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.9) transparent transparent transparent;
+}
+
+/* Strategy Card Styles */
 .strategy-card {
     cursor: pointer;
     transition: all 0.2s ease-in-out;
@@ -116,28 +177,37 @@ body {
      border: 2px solid #48bb78 !important;
     
 }
+/* New style for strategy card links */
+.strategy-link {
+    text-decoration: none;
+    color: inherit;
+}
 
-/* Custom Chart Styles for Backtest Pages */
-.pie-chart-container {
-    position: relative;
-    width: 100%;
-    max-width: 250px;
-    height: 250px;
-    margin: 0 auto;
+/* Chart Legend */
+.chart-legend {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 16px;
+    padding-top: 10px;
 }
 .legend-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    /* Use CSS variable provided by Vuetify theme */
-    background: rgba(var(--v-theme-surface-variant), 0.6);
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 14px;
+    font-size: 13px;
 }
 .legend-color {
-    width: 16px;
-    height: 16px;
-    border-radius: 3px;
-    flex-shrink: 0;
-} 
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    margin-right: 8px;
+}
+
+/* Saved Goal Card */
+.saved-goal-card {
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+.saved-goal-card:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
