@@ -11,7 +11,6 @@
 </head>
 
 <body>
-    <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-content">
             <div class="loading-spinner"></div>
@@ -85,27 +84,7 @@
                                             </v-card-text>
                                         </v-card>
                                     </v-col>
-                                    <v-col cols="12">
-                                        <v-card>
-                                            <v-card-title>投資成長曲線</v-card-title>
-                                            <v-card-text>
-                                                <v-row align="center" dense>
-                                                    <v-col cols="12" sm="4" md="2"><v-text-field v-model.number="form.initial" label="初期投入" type="number" variant="outlined" dense hide-details></v-text-field></v-col>
-                                                    <v-col cols="12" sm="4" md="2"><v-text-field v-model.number="form.monthly" label="每月定投" type="number" variant="outlined" dense hide-details></v-text-field></v-col>
-                                                    <v-col cols="12" sm="4" md="8">
-                                                        <v-chip-group v-model="projectionYears" mandatory color="primary">
-                                                            <v-chip :value="3">3 年</v-chip> <v-chip :value="5">5 年</v-chip> <v-chip :value="10">10 年</v-chip> <v-chip :value="20">20 年</v-chip>
-                                                        </v-chip-group>
-                                                    </v-col>
-                                                </v-row>
-                                                <v-row class="mt-4" dense>
-                                                    <v-col cols="12" sm="6"><v-card color="secondary" flat><v-card-text><div class="text-caption">累積投資金額</div><div class="text-h5 font-weight-bold">{{ formatK(projectionResult.invested) }}</div></v-card-text></v-card></v-col>
-                                                    <v-col cols="12" sm="6"><v-card color="primary" flat><v-card-text><div class="text-caption">預估資產總額</div><div class="text-h5 font-weight-bold">{{ formatK(projectionResult.value) }}</div></v-card-text></v-card></v-col>
-                                                </v-row>
-                                                <div style="height: 300px; margin-top: 16px;"><canvas id="projection-chart"></canvas></div>
-                                            </v-card-text>
-                                        </v-card>
-                                    </v-col>
+                              
                                  </v-row>
                                </v-card-text>
                             </v-card>
@@ -119,8 +98,8 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vuetify@3.4.0/dist/vuetify.min.js"></script>
     <script>
-        // Loading management
-        document.addEventListener('DOMContentLoaded', function() {
+              // Loading management
+              document.addEventListener('DOMContentLoaded', function() {
             // Simulate loading time for libraries and ensure smooth transition
             setTimeout(() => {
                 const loadingOverlay = document.getElementById('loadingOverlay');
@@ -134,7 +113,9 @@
                 }, 500);
             }, 1500);
         });
-        
+
+
+
         const { createApp, ref, watch, onMounted, nextTick } = Vue;
         const { createVuetify } = Vuetify;
 
