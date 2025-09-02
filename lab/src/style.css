@@ -210,7 +210,7 @@ body {
     align-items: center;
     gap: 8px;
     /* Use CSS variable provided by Vuetify theme */
-    background: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     padding: 8px 12px;
     font-size: 14px;
@@ -223,3 +223,6 @@ body {
 } 
 
 
+.text-caption {
+    color: #f9fafb;
+}
