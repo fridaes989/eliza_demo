@@ -24,15 +24,16 @@
             <v-main>
                 <v-container>
                     <v-row justify="center">
-                        <v-col cols="12" md="11" lg="10">
-                            <v-toolbar color="transparent">
-                                <v-toolbar-title class="text-h5 font-weight-bold text-primary">墨鏡姐複利樹</v-toolbar-title>
-                                <v-spacer></v-spacer>
-                                <v-btn text href="goal.html">財務規劃</v-btn>
-                                <v-btn text href="all_weather.html">全天候策略</v-btn>
-                                <v-btn text href="classic3.html" variant="tonal" color="primary">三基金組合</v-btn>
-                                <v-btn text href="aggressive.html">積極型股債組合</v-btn>
-                            </v-toolbar>
+                        <v-toolbar color="transparent">
+                            <v-toolbar-title class="text-h5 font-weight-bold text-primary">墨鏡姐複利樹</v-toolbar-title>
+                            <v-spacer></v-spacer>
+                            <v-btn text href="goal.html">財務規劃</v-btn>
+                            <v-btn text href="all_weather.html">全天候策略</v-btn>
+                            <v-btn text href="classic3.html" variant="tonal" color="primary">三基金組合</v-btn>
+                            <v-btn text href="aggressive.html">積極型股債組合</v-btn>
+                            <v-btn text href="core4.html">核心四基金</v-btn>
+                            <v-btn text href="voo.html">巴菲特推薦</v-btn>
+                        </v-toolbar>
                         
                             <v-card class="mt-4" flat color="transparent">
                               
@@ -51,7 +52,7 @@
                                                     <v-card-title>績效表現</v-card-title>
                                                     <v-row dense class="pa-2">
                                                         <v-col cols="12" sm="6"><v-card color="surface-variant" flat><v-card-text><div class="text-caption">年化報酬率 (估)</div><div class="text-h5 font-weight-bold text-primary">{{ pct(portfolio.data.CAGR) }}</div></v-card-text></v-card></v-col>
-                                                        <v-col cols="12" sm="6"><v-card color="surface-variant" flat><v-card-text><div class="text-caption">年化波動率</div><div class="text-h5 font-weight-bold text-primary">{{ pct(portfolio.data.volatility) }}</div></v-card-text></v-card></v-col>
+                                                        <v-col cols="12" sm="6"><v-card color="surface-variant" flat><v-card-text><div class="text-caption">年化波動率</div><div class="text-h5 font-weight-bold text-white">{{ pct(portfolio.data.volatility) }}</div></v-card-text></v-card></v-col>
                                                         <v-col cols="12"><v-card color="surface-variant" flat><v-card-text><div class="text-caption">最大回撤</div><div class="text-h5 font-weight-bold text-error">{{ pct(portfolio.data.maxDrawdown) }}</div></v-card-text></v-card></v-col>
                                                     </v-row>
                                                 </v-card>
@@ -88,27 +89,7 @@
                                             </v-card-text>
                                         </v-card>
                                     </v-col>
-                                    <v-col cols="12">
-                                        <v-card>
-                                            <v-card-title>投資成長曲線</v-card-title>
-                                            <v-card-text>
-                                                <v-row align="center" dense>
-                                                    <v-col cols="12" sm="4" md="2"><v-text-field v-model.number="form.initial" label="初期投入" type="number" variant="outlined" dense hide-details></v-text-field></v-col>
-                                                    <v-col cols="12" sm="4" md="2"><v-text-field v-model.number="form.monthly" label="每月定投" type="number" variant="outlined" dense hide-details></v-text-field></v-col>
-                                                    <v-col cols="12" sm="4" md="8">
-                                                        <v-chip-group v-model="projectionYears" mandatory color="primary">
-                                                            <v-chip :value="3">3 年</v-chip> <v-chip :value="5">5 年</v-chip> <v-chip :value="10">10 年</v-chip> <v-chip :value="20">20 年</v-chip>
-                                                        </v-chip-group>
-                                                    </v-col>
-                                                </v-row>
-                                                <v-row class="mt-4" dense>
-                                                    <v-col cols="12" sm="6"><v-card color="secondary" flat><v-card-text><div class="text-caption">累積投資金額</div><div class="text-h5 font-weight-bold">{{ formatK(projectionResult.invested) }}</div></v-card-text></v-card></v-col>
-                                                    <v-col cols="12" sm="6"><v-card color="primary" flat><v-card-text><div class="text-caption">預估資產總額</div><div class="text-h5 font-weight-bold">{{ formatK(projectionResult.value) }}</div></v-card-text></v-card></v-col>
-                                                </v-row>
-                                                <div style="height: 300px; margin-top: 16px;"><canvas id="projection-chart"></canvas></div>
-                                            </v-card-text>
-                                        </v-card>
-                                    </v-col>
+                                   
                                  </v-row>
                                </v-card-text>
                             </v-card>
@@ -137,7 +118,6 @@
                 }, 500);
             }, 1500);
         });
-        
         const { createApp, ref, watch, onMounted, nextTick } = Vue;
         const { createVuetify } = Vuetify;
 
