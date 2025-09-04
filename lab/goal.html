@@ -32,6 +32,8 @@
                                 <v-btn text href="all_weather.html">全天候策略</v-btn>
                                 <v-btn text href="classic3.html">三基金組合</v-btn>
                                 <v-btn text href="aggressive.html">積極型股債組合</v-btn>
+                                <v-btn text href="core4.html">核心四基金</v-btn>
+                                <v-btn text href="voo.html">巴菲特推薦</v-btn>
                             </v-toolbar>
 
                             <v-card class="mt-4" :color="theme === 'dark' ? 'surface' : 'grey-lighten-5'" flat>
@@ -126,10 +128,11 @@
                                                             <div>資金缺口：<strong>{{ Math.round((results.goalAmount - results.finalAsset) / 10000) }} 萬元</strong></div>
                                                             <v-divider class="my-3"></v-divider>
                                                             <strong>根據計算結果，如想在目標期內達成目標，可選擇：</strong>
-                                                            <ol class="pl-5 mt-2">
-                                                                <li>將年化報酬率提高至 <strong>{{ results.requiredReturn.toFixed(1) }}%</strong></li>
-                                                                <li>將每月投資金額提高至 <strong>{{ results.requiredInvestment.toFixed(1) }} 萬元</strong></li>
-                                                            </ol>
+                                    
+                                                            <v-row class="mt-4" dense>
+                                                                <v-col cols="12" sm="6"><v-card color="secondary" flat><v-card-text><div class="text-caption">將年化報酬率提高至</div><div class="text-h5 font-weight-bold">{{ results.requiredReturn.toFixed(1) }}%</div></v-card-text></v-card></v-col>
+                                                                <v-col cols="12" sm="6"><v-card color="primary" flat><v-card-text><div class="text-caption">將每月投資金額提高至</div><div class="text-h5 font-weight-bold">{{ results.requiredInvestment.toFixed(1) }} 萬元</div></v-card-text></v-card></v-col>
+                                                            </v-row>
                                                         </div>
                                                     </v-alert>
                                                 </div>
@@ -154,9 +157,14 @@
                                                                 <div class="text-h6">{{ rec.name }}</div>
                                                                 <v-chip size="small" color="primary" variant="flat">{{ (rec.expectedReturn * 100).toFixed(1) }}%</v-chip>
                                                             </div>
-                                                            <div class="font-weight-bold mb-3 text-success">建議月投：NT$ {{ rec.requiredMonthly.toLocaleString() }}</div>
+                                                            <div v-if="rec.isMetByInitial" class="font-weight-bold mb-3 text-success">
+                                                                ✔️ 現有月投金額足以達成目標
+                                                            </div>
+                                                            <div v-else class="font-weight-bold mb-3 text-success">
+                                                                可搭配月投：USD$ {{ rec.requiredMonthly.toLocaleString() }}
+                                                            </div>
                                                             <div class="text-caption text-medium-emphasis mb-3">{{ rec.reason }}</div>
-                                                            </v-card-item>
+                                                        </v-card-item>
                                                     </v-card>
                                                 </v-col>
                                             </v-row>
@@ -215,26 +223,26 @@
                 const inflationRate = 0.03;
                 const goalTypes = { 
                     retirement: { title: "退休規劃", CurrentAge:"目前年齡", ageLabel: "預計退休年齡", amountLabel: "每月期望退休被動收入(萬元)", withdrawRate: 0.04 }, 
-                    house: { title: "購屋計劃", CurrentAge:"目前年齡", ageLabel: "預計購屋年齡", amountLabel: "目標房屋總價(萬元)", withdrawRate: 1.0 }, 
+                    house: { title: "購屋計畫", CurrentAge:"目前年齡", ageLabel: "預計購屋年齡", amountLabel: "目標房屋總價(萬元)", withdrawRate: 1.0 }, 
                     education: { title: "教育基金", CurrentAge:"孩子目前年齡", ageLabel: "孩子預計入學年齡", amountLabel: "預估教育總費用(萬元)", withdrawRate: 1.0 }, 
                     emergency: { title: "緊急預備金", CurrentAge:"目前年齡", ageLabel: "預計完成年齡", amountLabel: "緊急預備金目標(萬元)", withdrawRate: 1.0 }, 
                     custom: { title: "自定義目標", CurrentAge:"目前年齡", ageLabel: "預計達成年齡", amountLabel: "目標金額(萬元)", withdrawRate: 1.0 } 
                 };
                 
                 const strategies = { 
-                    '全天候策略': { expectedReturn: 0.05, volatility: 0.092, allocation: { 'VTI (美國股市)': 30, 'TLT (長期國債)': 40, 'IEF (中期國債)': 15, 'VNQ (房地產)': 7.5, 'DJP (商品)': 7.5 } }, 
-                    '三基金組合': { expectedReturn: 0.086, volatility: 0.12, allocation: { 'VTI (美國股市)': 60, 'VTIAX (國際股市)': 20, 'BND (債券)': 20 } }, 
-                    '積極型股債組合': { expectedReturn: 0.112, volatility: 0.15, allocation: { 'VTI (美國股市)': 70, 'VTIAX (國際股市)': 10, 'BND (債券)': 20 } },
-                    '核心四基金': { expectedReturn: 0.099, volatility: 0.15, allocation: { 'VTI (美國股市)': 50, 'VXUS': 20, 'VNQ':10,'BND (債券)': 20 } },
-                    '標普500純粹持有': { expectedReturn: 0.139, volatility: 0.15, allocation: { 'VOO': 100} } 
+                    '全天候策略': { expectedReturn: 0.05, volatility: 0.67, allocation: { 'VTI': 30, 'TLT': 40, 'IEF': 15, 'GLD': 7.5, 'DBC': 7.5 } }, 
+                    '三基金組合': { expectedReturn: 0.08, volatility: 0.76, allocation: { 'VTI (美國股市)': 60, 'VTIAX (國際股市)': 20, 'BND (債券)': 20 } }, 
+                    '積極型股債組合': { expectedReturn: 0.099, volatility: 0.6, allocation: { 'VTI (美國股市)': 70, 'VTIAX (國際股市)': 10, 'BND (債券)': 20 } },
+                    '核心四基金': { expectedReturn: 0.1, volatility: 0.71, allocation: { 'VTI (美國股市)': 50, 'VXUS': 20, 'VNQ':10,'BND (債券)': 20 } },
+                    '巴菲特推薦': { expectedReturn: 0.128, volatility: 0.82, allocation: { 'VOO': 100} } 
                 };
                 
                 const strategyReasons = { 
                     '全天候策略': '此策略提供良好的風險分散，適合追求穩定報酬的投資者', 
                     '三基金組合': '簡單而有效的配置，適合長期投資且希望降低管理複雜度的投資者', 
                     '積極型股債組合': '較高的股票配置能帶來更好的長期報酬，適合年輕且風險承受度高的投資者',
-                    '核心四基金': '「三基金組合」的進階選項，在未來的高通膨環境中，因其租金和資產價值能隨通膨上漲的特性，可望帶來更強的保護', 
-                    '標普500純粹持有': '完全相信並押注於全球市場的長期增長， 以承受最大波動性為代價，追求最高潛在回報'  
+                    '核心四基金': '「三基金組合」的進階選項，增加房地產以對抗通膨。', 
+                    '巴菲特推薦': '完全相信並押注於美國最具代表性的 500 家頂級企業的長期增長。'  
                 };
 
                 // --- Reactive State ---
@@ -266,14 +274,14 @@
                 // --- Computed Properties ---
                 const currentGoalConfig = computed(() => goalTypes[form.value.goalType]);
                 const pageTitle = computed(() => `${currentGoalConfig.value.title}工具`);
-                const targetCurrentAge = computed(() => currentGoalConfig.value.CurrentAge);
+                const targetCurrentAge = computed(() => currentGoalConfig.value.CurrentAge); 
                 const targetAgeLabel = computed(() => currentGoalConfig.value.ageLabel);
                 const targetAmountLabel = computed(() => currentGoalConfig.value.amountLabel);
                 const resultsTitle = computed(() => `${currentGoalConfig.value.title}分析結果`);
                 const calculateButtonText = computed(() => `計算${currentGoalConfig.value.title}`);
                 const goalOptions = Object.keys(goalTypes).map(key => ({ text: goalTypes[key].title, value: key }));
                 const strategyOptions = [ 
-                    { text: '極保守型 - 全天候策略 (5%)', value: 0.05 }, { text: '穩健型 - 三基金組合 (8.6%)', value: 0.086 }, { text: '積極型 - 積極型股債 (11.2%)', value: 0.112 }, { text: '增長型 - 核心四基金 (9.9%)', value: 0.099 }, { text: '高風險型 - 標普500 (13.9%)', value: 0.139 } 
+                    { text: '極保守型 - 全天候策略 (5%)', value: 0.05 }, { text: '穩健型 - 三基金組合 (8%)', value: 0.08 }, { text: '積極型 - 積極型股債 (9.9%)', value: 0.099 }, { text: '增長型 - 核心四基金 (8.6%)', value: 0.086 }, { text: '高風險型 - 巴菲特推薦 (12.8%)', value: 0.128 } 
                 ];
                 
                 watch(() => form.value.goalType, () => { results.value.show = false; });
@@ -334,7 +342,7 @@
                 const deleteSavedGoal = (index) => {
                     savedGoals.value.splice(index, 1);
                     saveGoalsToStorage();
-                    snackbar.value = { show: true, message: '目標已删除', color: 'success' };
+                    snackbar.value = { show: true, message: '目標已刪除', color: 'success' };
                 };
                 
                 // --- Saved Goal Progress Calculation ---
@@ -370,10 +378,29 @@
                 };
                 
                 const projectAssets = (years, annualReturn, monthlyInvest) => {
-                    const projection = [form.value.currentAssets * 10000];
-                    for (let i = 1; i <= years; i++) {
-                        projection.push(projection[i - 1] * (1 + annualReturn) + (monthlyInvest * 12));
+                    const totalMonths = years * 12;
+                    const monthlyReturn = Math.pow(1 + annualReturn, 1/12) - 1;
+                    const monthlyInflation = Math.pow(1 + inflationRate, 1/12) - 1;
+                    const monthlyRealReturn = (1 + monthlyReturn) / (1 + monthlyInflation) - 1;
+                    
+                    const currentAssetsYuan = form.value.currentAssets * 10000;
+                    const projection = [currentAssetsYuan];
+                    
+                    for (let year = 1; year <= years; year++) {
+                        const monthsToCalculate = year * 12;
+                        const futureValueOfCurrentAssets = currentAssetsYuan * Math.pow(1 + monthlyRealReturn, monthsToCalculate);
+                        
+                        let futureValueOfMonthlyInvestments = 0;
+                        if (monthlyRealReturn === 0) {
+                            futureValueOfMonthlyInvestments = monthlyInvest * monthsToCalculate;
+                        } else {
+                            futureValueOfMonthlyInvestments = monthlyInvest * ((Math.pow(1 + monthlyRealReturn, monthsToCalculate) - 1) / monthlyRealReturn);
+                        }
+                        
+                        const totalAssets = futureValueOfCurrentAssets + futureValueOfMonthlyInvestments;
+                        projection.push(totalAssets);
                     }
+                    
                     return projection;
                 };
 
@@ -412,44 +439,115 @@
 
                 // --- Helper Calculation Functions ---
                 const calcRequiredReturn = (target, years) => {
-                    let low = 0, high = 0.5, startAssets = form.value.currentAssets * 10000, monthlyInvest = form.value.monthlyInvestment * 10000;
+                    let low = 0, high = 0.5;
+                    const startAssets = form.value.currentAssets * 10000;
+                    const monthlyInvest = form.value.monthlyInvestment * 10000;
+                    const totalMonths = years * 12;
+                    const monthlyInflation = Math.pow(1 + inflationRate, 1/12) - 1;
+                    
                     for (let i = 0; i < 100; i++) {
-                        let mid = (low + high) / 2, value = startAssets;
-                        for (let y = 0; y < years; y++) value = value * (1 + mid) + (monthlyInvest * 12);
-                        if (value > target) high = mid; else low = mid;
+                        const midAnnualReturn = (low + high) / 2;
+                        const midMonthlyReturn = Math.pow(1 + midAnnualReturn, 1/12) - 1;
+                        const midMonthlyRealReturn = (1 + midMonthlyReturn) / (1 + monthlyInflation) - 1;
+                        
+                        const futureValueOfCurrentAssets = startAssets * Math.pow(1 + midMonthlyRealReturn, totalMonths);
+                        
+                        let futureValueOfMonthlyInvestments = 0;
+                        if (midMonthlyRealReturn === 0) {
+                            futureValueOfMonthlyInvestments = monthlyInvest * totalMonths;
+                        } else {
+                            futureValueOfMonthlyInvestments = monthlyInvest * ((Math.pow(1 + midMonthlyRealReturn, totalMonths) - 1) / midMonthlyRealReturn);
+                        }
+                        
+                        const totalValue = futureValueOfCurrentAssets + futureValueOfMonthlyInvestments;
+                        
+                        if (totalValue > target) high = midAnnualReturn;
+                        else low = midAnnualReturn;
                     }
                     return low * 100;
                 };
 
                 const calcRequiredInvestment = (target, years) => {
-                    const currentReturn = form.value.strategyReturn, startAssets = form.value.currentAssets * 10000;
-                    let low = 0, high = 500000;
-                    for (let i = 0; i < 100; i++) {
-                        let mid = (low + high) / 2, value = startAssets;
-                        for (let y = 0; y < years; y++) value = value * (1 + currentReturn) + (mid * 12);
-                        if (value > target) high = mid; else low = mid;
+                    const currentReturn = form.value.strategyReturn;
+                    const monthlyReturn = Math.pow(1 + currentReturn, 1/12) - 1;
+                    const monthlyInflation = Math.pow(1 + inflationRate, 1/12) - 1;
+                    const monthlyRealReturn = (1 + monthlyReturn) / (1 + monthlyInflation) - 1;
+                    const startAssets = form.value.currentAssets * 10000;
+                    const totalMonths = years * 12;
+                    
+                    const futureValueOfCurrentAssets = startAssets * Math.pow(1 + monthlyRealReturn, totalMonths);
+                    const remainingNeeded = target - futureValueOfCurrentAssets;
+                    
+                    if (remainingNeeded <= 0) return 0;
+                    
+                    let requiredMonthlyInvestment = 0;
+                    if (monthlyRealReturn === 0) {
+                        requiredMonthlyInvestment = remainingNeeded / totalMonths;
+                    } else {
+                        requiredMonthlyInvestment = remainingNeeded * monthlyRealReturn / 
+                            (Math.pow(1 + monthlyRealReturn, totalMonths) - 1);
                     }
-                    return high / 10000;
+                    
+                    return requiredMonthlyInvestment / 10000;
                 };
 
                 // --- Strategy Recommendation Calculation ---
+                // MODIFICATION: The function now returns an object with amount and a boolean
                 const calculateRequiredMonthlyInvestmentForStrategy = (targetAmount, years, annualReturn) => {
-                    const monthlyReturn = annualReturn / 12, totalMonths = years * 12;
-                    const futureValueOfCurrent = (form.value.currentAssets * 10000) * Math.pow(1 + annualReturn, years);
-                    const remainingNeeded = targetAmount - futureValueOfCurrent;
-                    if (remainingNeeded <= 0) return 0;
-                    return remainingNeeded * monthlyReturn / (Math.pow(1 + monthlyReturn, totalMonths) - 1);
-                };
+                    const monthlyReturn = Math.pow(1 + annualReturn, 1/12) - 1;
+                    const monthlyInflation = Math.pow(1 + inflationRate, 1/12) - 1;
+                    const monthlyRealReturn = (1 + monthlyReturn) / (1 + monthlyInflation) - 1;
+                    const totalMonths = years * 12;
+                    const currentAssetsYuan = form.value.currentAssets * 10000;
+                    
+                    const futureValueOfCurrentAssets = currentAssetsYuan * Math.pow(1 + monthlyRealReturn, totalMonths);
+                    const remainingNeeded = targetAmount - futureValueOfCurrentAssets;
+                    
+                    if (remainingNeeded <= 0) {
+                        return { amount: 0, isMetByInitial: true };
+                    }
+                    
+                    let requiredMonthly = 0;
+                    if (monthlyRealReturn === 0) {
+                        requiredMonthly = remainingNeeded / totalMonths;
+                    } else {
+                        requiredMonthly = remainingNeeded * monthlyRealReturn / 
+                            (Math.pow(1 + monthlyRealReturn, totalMonths) - 1);
+                    }
 
+                    return { amount: requiredMonthly, isMetByInitial: false };
+                };
+                
+                // MODIFICATION: This function now handles the new object structure
                 const updateStrategyRecommendations = (goalAmount, years) => {
                     let bestStrategyName = null, lowestScore = Infinity;
-                    const riskTolerance = form.value.strategyReturn * 150;
-                    const recommendations = Object.entries(strategies).map(([name, strategy]) => ({ name, strategy, requiredMonthly: calculateRequiredMonthlyInvestmentForStrategy(goalAmount, years, strategy.expectedReturn) }));
-                    recommendations.forEach(rec => {
-                        const totalScore = rec.requiredMonthly + Math.abs(rec.strategy.volatility * 100 - riskTolerance) * 1000;
-                        if (totalScore < lowestScore) { lowestScore = totalScore; bestStrategyName = rec.name; }
+
+                    const recommendations = Object.entries(strategies).map(([name, strategy]) => {
+                        const calcResult = calculateRequiredMonthlyInvestmentForStrategy(goalAmount, years, strategy.expectedReturn);
+                        return {
+                            name,
+                            strategy,
+                            requiredMonthly: calcResult.amount,
+                            isMetByInitial: calcResult.isMetByInitial
+                        };
                     });
-                    recommendationResults.value = recommendations.map(rec => ({ name: rec.name, expectedReturn: rec.strategy.expectedReturn, requiredMonthly: Math.round(rec.requiredMonthly), reason: strategyReasons[rec.name], isBest: rec.name === bestStrategyName }));
+
+                    recommendations.forEach(rec => {
+                        const totalScore = rec.requiredMonthly + Math.abs(rec.strategy.volatility * 100 - (form.value.strategyReturn * 150)) * 1000;
+                        if (totalScore < lowestScore) {
+                            lowestScore = totalScore;
+                            bestStrategyName = rec.name;
+                        }
+                    });
+
+                    recommendationResults.value = recommendations.map(rec => ({
+                        name: rec.name,
+                        expectedReturn: rec.strategy.expectedReturn,
+                        requiredMonthly: Math.round(rec.requiredMonthly),
+                        reason: strategyReasons[rec.name],
+                        isBest: rec.name === bestStrategyName,
+                        isMetByInitial: rec.isMetByInitial
+                    }));
                 };
                 
                 // --- Interactivity ---
@@ -464,20 +562,46 @@
                 // --- Chart Rendering with Stacked Bars ---
                 const renderCustomChart = (assetsProjection, investmentProjection, goal, totalYears) => {
                     const maxValue = Math.max(goal, ...assetsProjection);
-                    const chartYears = [];
-                    for (let i = 0; i <= totalYears; i += 5) chartYears.push(i);
-                    if (chartYears[chartYears.length - 1] !== totalYears) chartYears.push(totalYears);
+                    
+                    const generateChartYears = (totalYears) => {
+                        const chartYears = [0, 1];
+                        let interval = 5;
+                        if (totalYears > 30) interval = 10;
+                        if (totalYears > 60) interval = 15;
+                        
+                        for (let i = interval; i <= totalYears; i += interval) {
+                            if (!chartYears.includes(i)) chartYears.push(i);
+                        }
+                        
+                        if (!chartYears.includes(totalYears) && totalYears > 1) {
+                            chartYears.push(totalYears);
+                        }
+                        
+                        return chartYears.sort((a, b) => a - b).filter((y, i, arr) => i === 0 || y > arr[i-1]);
+                    };
+                    
+                    const chartYears = generateChartYears(totalYears);
                     
                     const legendHTML = `<div class="chart-legend"><div class="legend-item"><div class="legend-color" style="background: linear-gradient(to top, #3182ce 0%, #4299e1 100%);"></div><span>累積投資成本</span></div><div class="legend-item"><div class="legend-color" style="background: linear-gradient(to top, #208065 0%, #40A080 100%);"></div><span>投資增長收益</span></div></div>`;
                     
                     let barsHTML = chartYears.map(year => {
-                        const totalAsset = assetsProjection[year], totalInvestment = investmentProjection[year], growth = totalAsset - totalInvestment;
-                        const investmentHeight = (totalInvestment / maxValue) * 300, growthHeight = (growth / maxValue) * 300;
+                        const totalAsset = assetsProjection[year];
+                        const totalInvestment = investmentProjection[year];
+                        const growth = totalAsset - totalInvestment;
+                        const investmentHeight = (totalInvestment / maxValue) * 300;
+                        const growthHeight = (growth / maxValue) * 300;
                         const tooltipContent = `<strong>總資產:</strong> ${Math.round(totalAsset / 10000)}萬<br><strong>累積投資成本:</strong> ${Math.round(totalInvestment / 10000)}萬<br><strong>投資增長收益:</strong> ${Math.round(growth / 10000)}萬`;
                         return `<div class="bar" style="height: ${investmentHeight + growthHeight}px;" onmouseover='window.appInstance.showTooltip(event, "${tooltipContent}")' onmousemove="window.appInstance.moveTooltip(event)" onmouseout="window.appInstance.hideTooltip()"><div class="bar-value">${Math.round(totalAsset / 10000)}萬</div><div class="bar-segment growth" style="height: ${growthHeight}px;"></div><div class="bar-segment investment" style="height: ${investmentHeight}px;"></div></div>`;
                     }).join('');
                     
-                    let labelsHTML = chartYears.map(year => `<div class="bar-label">${year}年後 (${form.value.currentAge + year}歲)</div>`).join('');
+                    let labelsHTML = chartYears.map(year => {
+                        if (year === 0) {
+                            return `<div class="bar-label">起始金額</div>`;
+                        } else {
+                            return `<div class="bar-label"><span class="year-text">${year}年後</span><span class="age-text">(${form.value.currentAge + year}歲)</span></div>`;
+                        }
+                    }).join('');
+                    
                     chartHTML.value = `${legendHTML}<div class="bar-chart"><div class="bars-container"><div class="goal-line" style="bottom: ${(goal / maxValue) * 300}px;"><div class="goal-label">目標 ${Math.round(goal/10000)}萬</div></div>${barsHTML}</div><div class="labels-container">${labelsHTML}</div></div>`;
                 };
 
