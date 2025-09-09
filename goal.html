@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>財務規劃 - 墨鏡姐複利樹</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="src/tailwind.config.js"></script>
+    <link rel="stylesheet" href="src/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+    
+</head>
+
+<body class="bg-background text-gray-200">
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <h3>載入中...</h3>
+            <p>正在準備您的財務規劃工具</p>
+        </div>
+    </div>
+
+    <div id="app" style="opacity: 0; transition: opacity 0.5s ease-in;">
+        <div id="chartTooltip" class="chart-tooltip"></div>
+        <div class="container mx-auto px-4 py-8">
+            <div class="max-w-7xl mx-auto">
+                <header class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                    <h1><img class="w-48 h-auto" src="img/logo.svg" alt="墨鏡姐複利樹"> </h1>
+                    <nav class="relative z-20">
+                        <div class="flex justify-end">
+                            <button @click="toggleMenu" class="p-2 rounded-md hover:bg-surface focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary" aria-label="Open navigation menu">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                                </svg>
+                            </button>
+                        </div>
+                    
+                        <transition
+                            enter-active-class="transition-opacity ease-in-out duration-300"
+                            enter-from-class="opacity-0"
+                            enter-to-class="opacity-100"
+                            leave-active-class="transition-opacity ease-in-out duration-300"
+                            leave-from-class="opacity-100"
+                            leave-to-class="opacity-0"
+                        >
+                            <div v-if="isMenuOpen" class="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center">
+                                
+                                <button @click="toggleMenu" class="absolute top-5 right-5 p-2 text-gray-400 hover:text-white" aria-label="Close navigation menu">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                                
+                                <div class="flex flex-col items-center gap-8">
+                                    <a @click="toggleMenu" href="goal.html" class="text-2xl text-primary font-semibold">財務規劃</a>
+                                    <a @click="toggleMenu" href="all_weather.html" class="text-2xl text-gray-300 hover:text-primary transition-colors">全天候策略</a>
+                                    <a @click="toggleMenu" href="classic3.html" class="text-2xl text-gray-300 hover:text-primary transition-colors">三基金組合</a>
+                                    <a @click="toggleMenu" href="aggressive.html" class="text-2xl hover:text-primary transition-colors">積極型股債組合</a>
+                                    <a @click="toggleMenu" href="core4.html" class="text-2xl text-gray-300 hover:text-primary transition-colors">核心四基金</a>
+                                    <a @click="toggleMenu" href="voo.html" class="text-2xl text-gray-300 hover:text-primary transition-colors">巴菲特推薦</a>
+                                </div>
+                            </div>
+                        </transition>
+                    </nav>
+                </header>
+
+                <main class="bg-background rounded-lg p-2">
+
+                    <div class="rounded-lg pb-6" v-if="savedGoals.length > 0">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center "><i class="mdi mdi-bookmark-outline mr-2"></i>已存目標</h3>
+                        <div class="space-y-3">
+                            <div v-for="(goal, index) in savedGoals" :key="index" class="p-3 border border-gray-700 rounded-lg cursor-pointer hover:bg-surface transition-colors" @click="loadSavedGoal(goal)">
+                                <div class="flex justify-between items-start">
+                                    <div>
+                                        <div class="font-bold">{{ goalTypes[goal.goalType].title }}</div>
+                                        <div class="text-xs text-gray-400 mt-1">{{ goal.currentAge }}歲 → {{ goal.targetAge }}歲 | 目標: {{ goal.targetValue }}萬美元</div>
+                                    </div>
+                                    <button @click.stop="deleteSavedGoal(index)" class="text-gray-500 hover:text-error transition-colors"><i class="mdi mdi-delete"></i></button>
+                                </div>
+                                <div class="mt-3">
+                                    <div class="flex justify-between text-xs text-gray-400 mb-1">
+                                        <span>當前: {{ (goal.currentAssets).toLocaleString() }}萬美元</span>
+                                        <span>目標: {{ Math.round(getCalculatedTargetAmount(goal) / 10000).toLocaleString() }}萬美元</span>
+                                    </div>
+                                    <div class="w-full bg-surface rounded-full h-1.5"><div class="bg-success h-1.5 rounded-full" :style="{width: calculateGoalProgress(goal) + '%'}"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-6">{{ pageTitle }} - 基本設定</h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <div class="lg:col-span-4 space-y-6">
+                            <div class="rounded-lg">
+                                <div class="space-y-4">
+                                    <div><label class="text-sm text-gray-400">選擇財務目標</label><select v-model="form.goalType" class="w-full p-2 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"><option v-for="opt in goalOptions" :value="opt.value">{{ opt.text }}</option></select></div>
+                                    <div><label class="text-sm text-gray-400">{{ targetCurrentAge }}</label><input v-model.number="form.currentAge" type="number" class="w-full p-2 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"></div>
+                                    <div><label class="text-sm text-gray-400">{{ targetAgeLabel }}</label><input v-model.number="form.targetAge" type="number" class="w-full p-2 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"></div>
+                                    <div><label class="text-sm text-gray-400">{{ targetAmountLabel }}</label><input v-model.number="form.targetValue" type="number" class="w-full p-2 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"></div>
+                                    <div><label class="text-sm text-gray-400">當前總資產 (萬美元)</label><input v-model.number="form.currentAssets" type="number" class="w-full p-2 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"></div>
+                                    <div><label class="text-sm text-gray-400">每月投資金額 (萬美元)</label><input v-model.number="form.monthlyInvestment" type="number" class="w-full p-2 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"></div>
+                                    <div><label class="text-sm text-gray-400">選擇投資策略</label><select v-model="form.strategyReturn" class="w-full p-2 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"><option v-for="opt in strategyOptions" :value="opt.value">{{ opt.text }}</option></select></div>
+                                    <button @click="calculate" class="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3 px-4 rounded-md transition-colors">{{ calculateButtonText }}</button>
+                                </div>
+                            </div>
+                            
+                            
+                        </div>
+
+                        <div class="lg:col-span-8">
+                            <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition ease-in duration-200" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <div v-if="results.show">
+                                    <div class="flex justify-between items-center mb-4">
+                                        <h2 class="text-2xl font-bold">{{ resultsTitle }}</h2>
+                                        <button @click="saveGoal" :disabled="!isLoggedIn" class="flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold transition-colors" :class="isLoggedIn ? 'bg-success/20 text-success hover:bg-success/30' : 'bg-gray-700 text-gray-400 cursor-not-allowed'">
+                                            <i class="mdi mdi-content-save"></i> {{ isLoggedIn ? '儲存目標' : '登入後可儲存' }}
+                                        </button>
+                                    </div>
+                                    <div class="bg-background rounded-lg p-2 mb-6"><div id="customChart" v-html="chartHTML"></div></div>
+                                    <div class="p-4 rounded-lg border-l-4" :class="results.isGoalAchieved ? 'bg-success/10 border-success' : 'bg-warning/10 border-warning'">
+                                        <div class="flex-col">
+                                            <i class="mdi text-3xl mb-3" :class="results.isGoalAchieved ? 'mdi-check-circle text-success' : 'mdi-alert-circle text-warning'"></i>
+                                            <div>
+                                                <h3 class="font-bold text-lg mb-1">{{ results.isGoalAchieved ? '目前策略可達成目標！' : '目前策略無法達成目標' }}</h3>
+                                                <p>預計達成時資產：<strong>{{ Math.round(results.finalAsset / 10000) }} 萬美元</strong></p>
+                                                <div v-if="!results.isGoalAchieved">
+                                                    <p>目標金額：<strong>{{ Math.round(results.goalAmount / 10000) }} 萬美元</strong></p>
+                                                    <p>資金缺口：<strong>{{ Math.round((results.goalAmount - results.finalAsset) / 10000) }} 萬美元</strong></p>
+                                                    <hr class="border-gray-600 my-3">
+                                                    <p class="font-semibold mb-3">根據計算結果，如想在目標期內達成目標，可選擇：</p>
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                        <div class="bg-secondary/50 p-4 rounded-lg"><div class="text-sm text-gray-300">將年化報酬率提高至</div><div class="text-2xl font-bold">{{ results.requiredReturn.toFixed(1) }}%</div></div>
+                                                        <div class="bg-primary/50 p-4 rounded-lg"><div class="text-sm text-gray-300">將每月投資金額提高至</div><div class="text-2xl font-bold">{{ results.requiredInvestment.toFixed(1) }} 萬元</div></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div v-else class="flex flex-col items-center justify-center h-full text-center text-gray-500">
+                                    <i class="mdi mdi-chart-line text-6xl"></i>
+                                    <p class="mt-4">請輸入您的財務目標並點擊計算</p>
+                                </div>
+                            </transition>
+                        </div>
+                    </div>
+                    
+                    <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0" enter-to-class="opacity-100">
+                        <div v-if="results.show" class="mt-8">
+                            <h3 class="text-xl text-center font-bold mb-4">💡 策略投資組合建議</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div v-for="rec in recommendationResults" :key="rec.name" class="bg-surface rounded-lg p-4 cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg border-2" :class="rec.isBest ? 'border-primary/50 bg-primary/50' : 'border-transparent'" @click="selectStrategy(rec.name)">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <h4 class="font-bold text-lg">{{ rec.name }}</h4>
+                                        <span class="text-sm font-semibold bg-primary text-white px-2 py-0.5 rounded-full">{{ (rec.expectedReturn * 100).toFixed(1) }}%</span>
+                                    </div>
+                                    <p class="text-xs text-gray-400 mb-3">{{ rec.reason }}</p>
+                                    <div v-if="rec.isMetByInitial" class="font-bold text-success text-sm">✔️ 現有月投金額足以達成目標</div>
+                                    <div v-else class="font-bold text-sm bg-primary-gradient text-white-hover p-2 rounded-md">可搭配月投：USD$ {{ rec.requiredMonthly.toLocaleString() }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </transition>
+                    
+                </main>
+            </div>
+        </div>
+
+        <transition enter-active-class="transition ease-out duration-300" enter-from-class="transform opacity-0 -translate-y-4" enter-to-class="transform opacity-100 translate-y-0" leave-active-class="transition ease-in duration-200" leave-from-class="transform opacity-100 translate-y-0" leave-to-class="transform opacity-0 -translate-y-4">
+            <div v-if="snackbar.show" class="fixed top-5 right-5 p-4 rounded-md shadow-lg text-white font-semibold" :class="{ 'bg-success': snackbar.color === 'success', 'bg-error': snackbar.color === 'error', 'bg-warning': snackbar.color === 'warning', 'bg-blue-500': snackbar.color === 'info' }">
+                {{ snackbar.message }}
+            </div>
+        </transition>
+    </div>
+
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script>
+        // Loading management
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                const app = document.getElementById('app');
+                loadingOverlay.style.opacity = '0';
+                app.style.opacity = '1';
+                setTimeout(() => { loadingOverlay.style.display = 'none'; }, 500);
+            }, 1500);
+        });
+
+        const { createApp, ref, computed, watch, nextTick } = Vue;
+        // NOTE: Removed Vuetify-related imports and instance creation
+
+        const app = createApp({
+            setup() {
+                            // --- ADD THIS LOGIC AT THE TOP ---
+                const isMenuOpen = ref(false);
+                const toggleMenu = () => {
+                    isMenuOpen.value = !isMenuOpen.value;
+                };
+
+                // The JS logic from the original file is pasted here, with Vuetify parts removed.
+                // --- Static Data ---
+                const inflationRate = 0.03;
+                const goalTypes = { 
+                    retirement: { title: "退休規劃", CurrentAge:"目前年齡", ageLabel: "預計退休年齡", amountLabel: "每月期望退休被動收入(萬美元)", withdrawRate: 0.04 }, 
+                    house: { title: "購屋計畫", CurrentAge:"目前年齡", ageLabel: "預計購屋年齡", amountLabel: "目標房屋總價(萬美元)", withdrawRate: 1.0 }, 
+                    education: { title: "教育基金", CurrentAge:"孩子目前年齡", ageLabel: "孩子預計入學年齡", amountLabel: "預估教育總費用(萬美元)", withdrawRate: 1.0 }, 
+                    emergency: { title: "緊急預備金", CurrentAge:"目前年齡", ageLabel: "預計完成年齡", amountLabel: "緊急預備金目標(萬美元)", withdrawRate: 1.0 }, 
+                    custom: { title: "自定義目標", CurrentAge:"目前年齡", ageLabel: "預計達成年齡", amountLabel: "目標金額(萬美元)", withdrawRate: 1.0 } 
+                };
+                
+                const strategies = { 
+                    '全天候策略': { expectedReturn: 0.05, volatility: 0.67, allocation: { 'VTI': 30, 'TLT': 40, 'IEF': 15, 'GLD': 7.5, 'DBC': 7.5 } }, 
+                    '三基金組合': { expectedReturn: 0.08, volatility: 0.76, allocation: { 'VTI (美國股市)': 60, 'VTIAX (國際股市)': 20, 'BND (債券)': 20 } }, 
+                    '積極型股債組合': { expectedReturn: 0.099, volatility: 0.6, allocation: { 'VTI (美國股市)': 70, 'VTIAX (國際股市)': 10, 'BND (債券)': 20 } },
+                    '核心四基金': { expectedReturn: 0.1, volatility: 0.71, allocation: { 'VTI (美國股市)': 50, 'VXUS': 20, 'VNQ':10,'BND (債券)': 20 } },
+                    '巴菲特推薦': { expectedReturn: 0.128, volatility: 0.82, allocation: { 'VOO': 100} } 
+                };
+                
+                const strategyReasons = { 
+                    '全天候策略': '此策略提供良好的風險分散，適合追求穩定報酬的投資者', 
+                    '三基金組合': '簡單而有效的配置，適合長期投資且希望降低管理複雜度的投資者', 
+                    '積極型股債組合': '較高的股票配置能帶來更好的長期報酬，適合年輕且風險承受度高的投資者',
+                    '核心四基金': '「三基金組合」的進階選項，增加房地產以對抗通膨。', 
+                    '巴菲特推薦': '完全相信並押注於美國最具代表性的 500 家頂級企業的長期增長。'  
+                };
+
+                // --- Reactive State ---
+                const form = ref({ goalType: 'retirement', currentAge: 25, targetAge: 65, targetValue: 5, currentAssets: 100, monthlyInvestment: 1,strategyReturn: 0.05});
+                const results = ref({ show: false });
+                const chartHTML = ref('');
+                const recommendationResults = ref([]);
+                const savedGoals = ref([]);
+                const isLoggedIn = ref(true); 
+                const snackbar = ref({ show: false, message: '', color: 'success' });
+
+                const showSnackbar = (message, color = 'success', duration = 3000) => {
+                    snackbar.value = { show: true, message, color };
+                    setTimeout(() => {
+                        snackbar.value.show = false;
+                    }, duration);
+                };
+
+                const loadSavedGoals = () => { try { const stored = localStorage.getItem('financialGoals'); if (stored) savedGoals.value = JSON.parse(stored); } catch (error) { console.error('Error loading saved goals:', error); } };
+                const saveGoalsToStorage = () => { try { localStorage.setItem('financialGoals', JSON.stringify(savedGoals.value)); } catch (error) { console.error('Error saving goals:', error); } };
+                loadSavedGoals();
+
+                const currentGoalConfig = computed(() => goalTypes[form.value.goalType]);
+                const pageTitle = computed(() => `${currentGoalConfig.value.title}工具`);
+                const targetCurrentAge = computed(() => currentGoalConfig.value.CurrentAge);
+                const targetAgeLabel = computed(() => currentGoalConfig.value.ageLabel);
+                const targetAmountLabel = computed(() => currentGoalConfig.value.amountLabel);
+                const resultsTitle = computed(() => `${currentGoalConfig.value.title}分析結果`);
+                const calculateButtonText = computed(() => `計算${currentGoalConfig.value.title}`);
+                const goalOptions = Object.keys(goalTypes).map(key => ({ text: goalTypes[key].title, value: key }));
+                const strategyOptions = [ { text: '極保守型 - 全天候策略 (5%)', value: 0.05 }, { text: '穩健型 - 三基金組合 (8%)', value: 0.08 }, { text: '積極型 - 積極型股債 (9.9%)', value: 0.099 }, { text: '增長型 - 核心四基金 (8.6%)', value: 0.086 }, { text: '高風險型 - 巴菲特推薦 (12.8%)', value: 0.128 } ];
+                
+                watch(() => form.value.goalType, () => { results.value.show = false; });
+
+                const showTooltip = (event, content) => { const el = document.getElementById('chartTooltip'); if (el) { el.innerHTML = content; el.classList.add('visible'); moveTooltip(event); } };
+                const moveTooltip = (event) => { const el = document.getElementById('chartTooltip'); if (el) { const rect = el.getBoundingClientRect(); el.style.left = `${event.pageX - (rect.width / 2)}px`; el.style.top = `${event.pageY - rect.height - 15}px`; } };
+                const hideTooltip = () => { const el = document.getElementById('chartTooltip'); if (el) el.classList.remove('visible'); };
+                
+                const saveGoal = () => {
+                    if (!isLoggedIn.value) { showSnackbar('請先登入才能儲存目標', 'warning'); return; }
+                    const goalData = { ...form.value, savedAt: new Date().toISOString() };
+                    const existingIndex = savedGoals.value.findIndex(g => g.goalType === goalData.goalType);
+                    if (existingIndex !== -1) { savedGoals.value[existingIndex] = goalData; showSnackbar('目標已更新！', 'success'); } 
+                    else { savedGoals.value.push(goalData); showSnackbar('目標已儲存！', 'success'); }
+                    saveGoalsToStorage();
+                };
+
+                const loadSavedGoal = (goal) => {
+                    form.value = { ...goal };
+                    nextTick(() => { calculate(); showSnackbar('已載入目標並重新計算', 'info'); });
+                };
+
+                const deleteSavedGoal = (index) => { savedGoals.value.splice(index, 1); saveGoalsToStorage(); showSnackbar('目標已刪除', 'success'); };
+                
+                const getCalculatedTargetAmount = (goal) => {
+                    const config = goalTypes[goal.goalType]; const years = goal.targetAge - goal.currentAge;
+                    if (years <= 0) return goal.targetValue * 10000;
+                    const targetValueYuan = goal.targetValue * 10000;
+                    if (config.withdrawRate === 0.04) { let base = (targetValueYuan * 12 / config.withdrawRate); return Math.round(base * Math.pow(1 + inflationRate, years)); }
+                    return targetValueYuan;
+                };
+
+                const calculateGoalProgress = (goal) => {
+                    const targetAmount = getCalculatedTargetAmount(goal); if (targetAmount <= 0) return 0;
+                    const currentAssets = goal.currentAssets * 10000;
+                    return Math.min((currentAssets / targetAmount) * 100, 100);
+                };
+
+                const getGoalAmount = (years) => {
+                    const config = currentGoalConfig.value; const targetValueYuan = form.value.targetValue * 10000;
+                    if (config.withdrawRate === 0.04) { let base = (targetValueYuan * 12 / config.withdrawRate); return Math.round(base * Math.pow(1 + inflationRate, years)); }
+                    return targetValueYuan;
+                };
+                
+                const projectAssets = (years, annualReturn, monthlyInvest) => {
+                    const monthlyReturn = Math.pow(1 + annualReturn, 1/12) - 1;
+                    const currentAssetsYuan = form.value.currentAssets * 10000; const projection = [currentAssetsYuan];
+                    for (let year = 1; year <= years; year++) {
+                        let totalAssets = currentAssetsYuan * Math.pow(1 + annualReturn, year);
+                        if (annualReturn > 0) { totalAssets += (monthlyInvest * 12) * ((Math.pow(1 + annualReturn, year) - 1) / annualReturn); } 
+                        else { totalAssets += (monthlyInvest * 12 * year); }
+                        projection.push(totalAssets);
+                    }
+                    return projection;
+                };
+
+                const calculateAccumulatedInvestment = (years, monthlyInvest) => {
+                    const initial = form.value.currentAssets * 10000; const accumulated = [initial];
+                    for (let i = 1; i <= years; i++) { accumulated.push(initial + (monthlyInvest * 12 * i)); }
+                    return accumulated;
+                };
+
+                const calculate = () => {
+                    if (form.value.targetAge <= form.value.currentAge) { showSnackbar('目標年齡必須大於目前年齡', 'error'); return; }
+                    const years = form.value.targetAge - form.value.currentAge;
+                    const goalAmount = getGoalAmount(years);
+                    const monthlyInvestYuan = form.value.monthlyInvestment * 10000;
+                    const assetsProjection = projectAssets(years, form.value.strategyReturn, monthlyInvestYuan);
+                    const investmentProjection = calculateAccumulatedInvestment(years, monthlyInvestYuan);
+                    const finalAsset = assetsProjection[assetsProjection.length - 1];
+                    results.value = { show: true, isGoalAchieved: finalAsset >= goalAmount, finalAsset, goalAmount, years };
+                    if (!results.value.isGoalAchieved) { results.value.requiredReturn = calcRequiredReturn(goalAmount, years); results.value.requiredInvestment = calcRequiredInvestment(goalAmount, years); }
+                    updateStrategyRecommendations(goalAmount, years);
+                    renderCustomChart(assetsProjection, investmentProjection, goalAmount, years);
+                };
+
+                const calcRequiredReturn = (target, years) => {
+                    let low = 0, high = 0.5; const startAssets = form.value.currentAssets * 10000; const monthlyInvest = form.value.monthlyInvestment * 10000;
+                    for (let i = 0; i < 100; i++) {
+                        const mid = (low + high) / 2; let val = startAssets * Math.pow(1 + mid, years);
+                        if (mid > 0) { val += (monthlyInvest * 12) * ((Math.pow(1 + mid, years) - 1) / mid); } 
+                        else { val += (monthlyInvest * 12 * years); }
+                        if (val > target) high = mid; else low = mid;
+                    }
+                    return low * 100;
+                };
+
+                const calcRequiredInvestment = (target, years) => {
+                    const r = form.value.strategyReturn; const startAssets = form.value.currentAssets * 10000;
+                    const fvCurrent = startAssets * Math.pow(1 + r, years); const needed = target - fvCurrent;
+                    if (needed <= 0) return 0;
+                    let requiredMonthly;
+                    if (r > 0) { requiredMonthly = needed / (((Math.pow(1 + r, years) - 1) / r) * 12); } 
+                    else { requiredMonthly = needed / (years * 12); }
+                    return requiredMonthly / 10000;
+                };
+
+                const calculateRequiredMonthlyInvestmentForStrategy = (targetAmount, years, annualReturn) => {
+                    const startAssets = form.value.currentAssets * 10000;
+                    const fvCurrent = startAssets * Math.pow(1 + annualReturn, years);
+                    const remainingNeeded = targetAmount - fvCurrent;
+                    if (remainingNeeded <= 0) return { amount: 0, isMetByInitial: true };
+                    let requiredMonthly = 0;
+                    if (annualReturn > 0) { requiredMonthly = remainingNeeded / (((Math.pow(1 + annualReturn, years) - 1) / annualReturn) * 12); } 
+                    else { requiredMonthly = remainingNeeded / (years * 12); }
+                    return { amount: requiredMonthly, isMetByInitial: false };
+                };
+                
+                const updateStrategyRecommendations = (goalAmount, years) => {
+                    let bestStrategyName = null, lowestScore = Infinity;
+                    const recommendations = Object.entries(strategies).map(([name, strategy]) => {
+                        const calcResult = calculateRequiredMonthlyInvestmentForStrategy(goalAmount, years, strategy.expectedReturn);
+                        return { name, strategy, requiredMonthly: calcResult.amount, isMetByInitial: calcResult.isMetByInitial };
+                    });
+                    recommendations.forEach(rec => { const score = rec.requiredMonthly + Math.abs(rec.strategy.volatility * 100 - (form.value.strategyReturn * 150)) * 1000; if (score < lowestScore) { lowestScore = score; bestStrategyName = rec.name; } });
+                    recommendationResults.value = recommendations.map(rec => ({ name: rec.name, expectedReturn: rec.strategy.expectedReturn, requiredMonthly: Math.round(rec.requiredMonthly), reason: strategyReasons[rec.name], isBest: rec.name === bestStrategyName, isMetByInitial: rec.isMetByInitial }));
+                };
+                
+                const selectStrategy = (strategyName) => {
+                    const selected = strategies[strategyName]; if (!selected) return;
+                    const closest = strategyOptions.reduce((p, c) => Math.abs(c.value - selected.expectedReturn) < Math.abs(p.value - selected.expectedReturn) ? c : p);
+                    form.value.strategyReturn = closest.value; if (results.value.show) calculate();
+                };
+
+                // In goal.html, find and replace the entire old function with this new one:
+
+                const renderCustomChart = (assetsProjection, investmentProjection, goal, totalYears) => {
+                    const maxValue = Math.max(goal, ...assetsProjection);
+                    
+                    const generateChartYears = (total) => {
+                        const years = [0, 1]; let i = 5; if (total > 30) i = 10; if (total > 60) i = 15;
+                        for (let y = i; y <= total; y += i) if (!years.includes(y)) years.push(y);
+                        if (!years.includes(total) && total > 1) years.push(total);
+                        return years.sort((a, b) => a - b).filter((y, i, a) => i === 0 || y > a[i-1]);
+                    };
+                    
+                    const chartYears = generateChartYears(totalYears);
+                    
+                    const legendHTML = `<div class="chart-legend"><div class="legend-item"><div class="legend-color" style="background: linear-gradient(to top, #3182ce 0%, #4299e1 100%);"></div><span>累積投資成本</span></div><div class="legend-item"><div class="legend-color" style="background: linear-gradient(to top, #208065 0%, #40A080 100%);"></div><span>投資增長收益</span></div></div>`;
+                    
+                    let barsHTML = chartYears.map(year => {
+                        const totalAsset = assetsProjection[year] || 0;
+                        const totalInvestment = investmentProjection[year] || 0;
+                        const growth = totalAsset > totalInvestment ? totalAsset - totalInvestment : 0;
+                        
+                        // CHANGED: Calculate total bar height as a percentage of the container's height
+                        const totalHeightPercent = maxValue > 0 ? (totalAsset / maxValue) * 100 : 0;
+                        
+                        // CHANGED: Calculate segment heights as a percentage of the bar's total height
+                        const investmentHeightPercent = totalAsset > 0 ? (totalInvestment / totalAsset) * 100 : 0;
+                        const growthHeightPercent = totalAsset > 0 ? (growth / totalAsset) * 100 : 0;
+
+                        const tooltipContent = `<strong>總資產:</strong> ${Math.round(totalAsset / 10000)}萬<br><strong>累積投資成本:</strong> ${Math.round(totalInvestment / 10000)}萬<br><strong>投資增長收益:</strong> ${Math.round(growth / 10000)}萬`;
+                        
+                        return `<div class="bar" style="height: ${totalHeightPercent}%;" onmouseover='window.appInstance.showTooltip(event, "${tooltipContent}")' onmousemove="window.appInstance.moveTooltip(event)" onmouseout="window.appInstance.hideTooltip()">
+                                    <div class="bar-value">${Math.round(totalAsset / 10000)}萬</div>
+                                    <div class="bar-segment growth" style="height: ${growthHeightPercent}%;"></div>
+                                    <div class="bar-segment investment" style="height: ${investmentHeightPercent}%;"></div>
+                                </div>`;
+                    }).join('');
+                    
+                    // Calculate the position, but cap it at a maximum of 95% to leave room for the label.
+                    let calculatedBottomPercent = maxValue > 0 ? (goal / maxValue) * 100 : 0;
+                    const goalLineBottomPercent = Math.min(calculatedBottomPercent, 95);
+
+                    let labelsHTML = chartYears.map(year => year === 0 ? `<div class="bar-label">起始金額</div>` : `<div class="bar-label"><span class="year-text">${year}年後</span><span class="age-text">(${form.value.currentAge + year}歲)</span></div>`).join('');
+                    
+                    chartHTML.value = `${legendHTML}
+                        <div class="bar-chart">
+                            <div class="bars-container">
+                                <div class="goal-line" style="bottom: ${goalLineBottomPercent}%;">
+                                    <div class="goal-label">目標 ${Math.round(goal/10000)}萬</div>
+                                </div>
+                                ${barsHTML}
+                            </div>
+                            <div class="labels-container">${labelsHTML}</div>
+                        </div>`;
+                };
+                return { 
+                    form, results, chartHTML, recommendationResults, savedGoals, isLoggedIn, snackbar,
+                    goalTypes, pageTitle, targetCurrentAge, targetAgeLabel, targetAmountLabel, resultsTitle, 
+                    calculateButtonText, goalOptions, strategyOptions, strategies, calculate, selectStrategy,
+                    saveGoal, loadSavedGoal, deleteSavedGoal, showTooltip, moveTooltip, hideTooltip,
+                    getCalculatedTargetAmount, calculateGoalProgress, isMenuOpen, toggleMenu
+                };
+            }
+        });
+        
+        const vm = app.mount('#app');
+        window.appInstance = vm;
+    </script>
+</body>
+</html>
