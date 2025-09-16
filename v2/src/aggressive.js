@@ -1,29 +1,37 @@
-// portfolio_config.js
+// src/all_weather.js
 
+// 這個物件變數是 app.js 將讀取的設定檔
 const portfolioConfig = {
-    // 投資組合基本資料
+    // Section 1: Google Sheet URL for THIS portfolio
+    googleSheet: {
+        // 這是所有投資組合共用的 Google Sheet 檔案 ID
+        sheetId: '2PACX-1vTJOnAP0pKYY9aSGqhB3dbKAtzM32FSPHH4J8VKtdM3rBvm97qG2zPMgPfhLAgMzfTkW571ODjEmvVd',
+        
+        // 這是「投資組合」 (e.g., 全天候策略) 對應的工作表 ID
+        gid: '1065112708',
+
+        // 這是 S&P 500 指數專用的工作表 ID
+        sp500Gid: '283425635',
+
+        // 根據 gid 產生對應的資料 URL
+        get dataUrl() { return `https://docs.google.com/spreadsheets/d/e/${this.sheetId}/pub?gid=${this.gid}&single=true&output=csv`; },
+        get sp500DataUrl() { return `https://docs.google.com/spreadsheets/d/e/${this.sheetId}/pub?gid=${this.sp500Gid}&single=true&output=csv`; }
+    },
+
+    // Section 2: Portfolio-specific details
     portfolio: {
         name: "積極型股債組合",
         data: {
             allocations: { VT: 80, BNDW: 20 },
-            CAGR: 0.096, 
-            volatility: 0.132, 
-            maxDrawdown: -0.40,
-            // Use a getter to calculate riskRatio dynamically
-            get riskRatio() {
-                // 'this' refers to the current object (the 'data' object)
-                // Add a check to prevent division by zero
-                if (this.volatility === 0) {
-                    return 0;
-                }
-                return this.CAGR / this.volatility;
-            }
+            CAGR: 0, 
+            volatility: 0, 
+            maxDrawdown: 0,
+            
         },
         description: `
         <p>此配置為「80/20」高增長策略，旨在透過高比例股票追求長期回報最大化。</p>
         <p>組合由80%「全球股票市場基金(VT)」和20%「全球債券市場基金(BNDW)」組成。VT單一基金便涵蓋全球逾九千家公司股票，實現一檔基金投遍世界的目標，適合投資年限長、風險承受度高的投資人。</p>`,
         
-     
         // 改為數組格式
         pros: [
             "極致的分散: 僅用VT和BNDW兩支ETF，便能有效投資全球數十國的股票及債券，實現最大化的資產分散。",
@@ -41,157 +49,16 @@ const portfolioConfig = {
         retirement:"剛開始工作、距離退休非常遙遠的年輕人",
         education:"孩子剛出生，有 18 年時間追求最高增長",
         housing:"不太適用（風險過高）"
-    },
-
-    // 績效比較表格設定
-    performanceTable: {
-        headers: [
-            { title: '指標', key: 'metric', align: 'start', sortable: false },
-            { title: '全天候策略', key: 'portfolio', align: 'center', sortable: false },
-            { title: 'S&P 500', key: 'sp500', align: 'center', sortable: false },
-            { title: '差異', key: 'difference', align: 'center', sortable: false }
-        ],
-        metrics: [
-            {
-                key: 'cagr',
-                metric: '年化報酬率',
-                format: 'percentage',
-                betterWhen: 'higher'
-            },
-            {
-                key: 'volatility', 
-                metric: '年化波動率',
-                format: 'percentage',
-                betterWhen: 'lower'
-            },
-            {
-                key: 'sharpe',
-                metric: '風險調整報酬',
-                format: 'ratio',
-                betterWhen: 'higher'
-            }
-        ]
-    },
-    
-    // 投資組合回測歷史數據 (CSV 格式)
-    csvData: `
-    date,portfolio_monthly_return,portfolio_value,sp500_value
-    2018-09,0.0,10000,10000
-    2018-10,-6.317512,9368,9309
-    2018-11,1.4886,9508,9481
-    2018-12,-5.492364,8986,8646
-    2019-01,6.605953,9579,9338
-    2019-02,2.266411,9796,9642
-    2019-03,1.232524,9917,9815
-    2019-04,2.773613,10192,10217
-    2019-05,-4.456666,9738,9565
-    2019-06,5.380047,10262,10231
-    2019-07,0.142573,10276,10385
-    2019-08,-1.195523,10153,10212
-    2019-09,1.700934,10326,10410
-    2019-10,2.21261,10555,10640
-    2019-11,2.009083,10767,11025
-    2019-12,2.722979,11060,11346
-    2020-01,-0.861698,10965,11341
-    2020-02,-5.545945,10356,10444
-    2020-03,-12.154881,9098,9140
-    2020-04,8.65426,9885,10300
-    2020-05,4.263358,10306,10791
-    2020-06,2.584075,10573,10982
-    2020-07,4.464509,11045,11629
-    2020-08,4.636744,11557,12441
-    2020-09,-2.289037,11292,11975
-    2020-10,-1.672429,11103,11676
-    2020-11,10.068498,12221,12946
-    2020-12,3.974669,12707,13426
-    2021-01,-0.332697,12665,13289
-    2021-02,1.769138,12889,13659
-    2021-03,2.19621,13172,14279
-    2021-04,3.354664,13614,15035
-    2021-05,1.284875,13789,15133
-    2021-06,1.057743,13935,15473
-    2021-07,0.741114,14038,15850
-    2021-08,1.740911,14282,16322
-    2021-09,-3.507694,13781,15561
-    2021-10,4.045578,14339,16653
-    2021-11,-1.954148,14059,16519
-    2021-12,2.938678,14472,17283
-    2022-01,-4.013946,13891,16372
-    2022-02,-2.45273,13550,15889
-    2022-03,1.013406,13688,16486
-    2022-04,-7.182964,12704,15039
-    2022-05,0.412172,12757,15073
-    2022-06,-6.814404,11887,13830
-    2022-07,6.148232,12618,15104
-    2022-08,-3.897756,12126,14488
-    2022-09,-8.340167,11115,13148
-    2022-10,4.974259,11668,14217
-    2022-11,7.277363,12517,15008
-    2022-12,-3.964138,12021,14143
-    2023-01,6.680477,12824,15032
-    2023-02,-3.007823,12438,14654
-    2023-03,2.499771,12749,15197
-    2023-04,1.183074,12900,15440
-    2023-05,-1.102514,12758,15512
-    2023-06,4.010855,13270,16517
-    2023-07,2.901932,13655,17057
-    2023-08,-2.350871,13334,16780
-    2023-09,-4.184046,12776,15984
-    2023-10,-2.552329,12450,15637
-    2023-11,7.945186,13439,17066
-    2023-12,3.808067,13951,17845
-    2024-01,-0.09568,13937,18129
-    2024-02,3.36637,14406,19075
-    2024-03,2.382338,14750,19699
-    2024-04,-3.295477,14263,18904
-    2024-05,2.566814,14630,19861
-    2024-06,2.198283,14951,20561
-    2024-07,1.972183,15246,20810
-    2024-08,2.025305,15555,21297
-    2024-09,1.68196,15816,21744
-    2024-10,-2.132408,15479,21550
-    2024-11,3.533217,16026,22835
-    2024-12,-3.443172,15474,22286
-    2025-01,2.520929,15864,22884
-    2025-02,-0.061578,15855,22594
-    2025-03,-3.226892,15343,21335
-    2025-04,0.59961,15435,21150
-    2025-05,4.506472,16131,22479
-    2025-06,3.478981,16692,23564
-    2025-07,0.796911,16825,24107
-    2025-08,1.720603,17114,24337 `,
-
-    // 歷年每月年化波動率數據
-    volatilityByMonth: [
-        { date: '2021-01', portfolio_vol: 0.08, sp500_vol: 0.15 },
-        { date: '2021-02', portfolio_vol: 0.07, sp500_vol: 0.16 },
-        { date: '2021-03', portfolio_vol: 0.09, sp500_vol: 0.14 },
-        { date: '2021-04', portfolio_vol: 0.06, sp500_vol: 0.12 },
-        { date: '2021-05', portfolio_vol: 0.05, sp500_vol: 0.11 },
-        { date: '2021-06', portfolio_vol: 0.06, sp500_vol: 0.10 },
-        { date: '2021-07', portfolio_vol: 0.07, sp500_vol: 0.11 },
-        { date: '2021-08', portfolio_vol: 0.06, sp500_vol: 0.09 },
-        { date: '2021-09', portfolio_vol: 0.08, sp500_vol: 0.13 },
-        { date: '2021-10', portfolio_vol: 0.07, sp500_vol: 0.12 },
-        { date: '2021-11', portfolio_vol: 0.08, sp500_vol: 0.15 },
-        { date: '2021-12', portfolio_vol: 0.07, sp500_vol: 0.13 },
-        { date: '2022-01', portfolio_vol: 0.12, sp500_vol: 0.22 },
-        { date: '2022-02', portfolio_vol: 0.11, sp500_vol: 0.20 },
-        { date: '2022-03', portfolio_vol: 0.10, sp500_vol: 0.18 },
-        { date: '2022-04', portfolio_vol: 0.13, sp500_vol: 0.25 },
-        { date: '2022-05', portfolio_vol: 0.12, sp500_vol: 0.23 },
-        { date: '2022-06', portfolio_vol: 0.15, sp500_vol: 0.28 },
-        { date: '2022-07', portfolio_vol: 0.11, sp500_vol: 0.21 },
-        { date: '2022-08', portfolio_vol: 0.12, sp500_vol: 0.22 },
-        { date: '2022-09', portfolio_vol: 0.16, sp500_vol: 0.30 },
-        { date: '2022-10', portfolio_vol: 0.13, sp500_vol: 0.26 },
-        { date: '2022-11', portfolio_vol: 0.10, sp500_vol: 0.19 },
-        { date: '2022-12', portfolio_vol: 0.11, sp500_vol: 0.22 },
-        { date: '2023-01', portfolio_vol: 0.09, sp500_vol: 0.17 },
-        { date: '2023-02', portfolio_vol: 0.10, sp500_vol: 0.18 },
-        { date: '2023-03', portfolio_vol: 0.11, sp500_vol: 0.20 },
-        { date: '2023-04', portfolio_vol: 0.08, sp500_vol: 0.15 },
-        { date: '2023-05', portfolio_vol: 0.09, sp500_vol: 0.16 },
-        { date: '2023-06', portfolio_vol: 0.07, sp500_vol: 0.12 },
-    ]
+    }
 };
+
+/**
+ * 其他投資組合的設定方式：
+ * 1. 複製此檔案並重新命名 (例如 classic3.js, aggressive.js)。
+ * 2. 修改 portfolioConfig.googleSheet.gid 為對應的 ID：
+ * - classic3: 1808108800
+ * - aggressive: 1065112708
+ * - core4: 261742724
+ * - voo: 736791427
+ * 3. 修改 portfolio 物件中的 name, allocations, description, pros, cons 等資訊。
+ */
