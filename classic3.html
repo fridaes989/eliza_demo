@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="src/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
-     <link rel="icon" href="img/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
     <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
     <script src="src/tailwind.config.js"></script>
 
@@ -53,7 +53,7 @@
                                     </svg>
                                 </button>
                                 
-                                 <div class="flex flex-col items-center gap-8">
+                                <div class="flex flex-col items-center gap-8">
                                     <a @click="toggleMenu" href="goal.html" class="text-2xl text-gray-300 hover:text-primary transition-colors">財務規劃</a>
                                     <a @click="toggleMenu" href="all_weather.html" class="text-2xl text-gray-300 hover:text-primary transition-colors">全天候策略</a>
                                     <a @click="toggleMenu" href="classic3.html" class="text-2xl text-primary font-semibold">三基金組合</a>
@@ -123,31 +123,31 @@
                                  <div class="grid grid-cols-2 gap-4">
                                      <div class="bg-background p-4 rounded-lg">
                                         <div class="flex items-center gap-1 text-sm text-gray-400">
-                                            <span>年化報酬率</span>
+                                            <span>年化報酬率 (估)</span>
                                             <i @click="openModal('cagr')" class="mdi mdi-information-outline cursor-pointer hover:text-primary transition-colors"></i>
                                         </div>
-                                        <div class="text-2xl font-bold text-primary pt-2">{{ pct(portfolio.data.CAGR) }}</div>
+                                        <div class="text-2xl font-bold text-primary">{{ pct(portfolio.data.CAGR) }}</div>
                                      </div>
                                      <div class="bg-background p-4 rounded-lg">
                                         <div class="flex items-center gap-1 text-sm text-gray-400">
                                             <span>年化波動率</span>
                                             <i @click="openModal('volatility')" class="mdi mdi-information-outline cursor-pointer hover:text-primary transition-colors"></i>
                                         </div>
-                                        <div class="text-2xl font-bold  pt-2">{{ pct(portfolio.data.volatility) }}</div>
+                                        <div class="text-2xl font-bold">{{ pct(portfolio.data.volatility) }}</div>
                                      </div>
                                      <div class="bg-background p-4 rounded-lg">
                                         <div class="flex items-center gap-1 text-sm text-gray-400">
                                             <span>最大回撤</span>
                                             <i @click="openModal('maxDrawdown')" class="mdi mdi-information-outline cursor-pointer hover:text-primary transition-colors"></i>
                                         </div>
-                                        <div class="text-2xl font-bold text-error pt-2">{{ pct(portfolio.data.maxDrawdown) }}</div>
+                                        <div class="text-2xl font-bold text-error">{{ pct(portfolio.data.maxDrawdown) }}</div>
                                      </div>
                                      <div class="bg-background p-4 rounded-lg">
                                         <div class="flex items-center gap-1 text-sm text-gray-400">
-                                            <span>夏普比率</span>
+                                            <span>年化報酬/年化波動比</span>
                                             <i @click="openModal('sharpe')" class="mdi mdi-information-outline cursor-pointer hover:text-primary transition-colors"></i>
                                         </div>
-                                        <div class="text-2xl font-bold pt-2">{{ (portfolio.data.CAGR / portfolio.data.volatility).toFixed(2) }}</div>
+                                        <div class="text-2xl font-bold">{{ (portfolio.data.CAGR / portfolio.data.volatility).toFixed(2) }}</div>
                                      </div>
                                  </div>
                             </div>
@@ -219,7 +219,7 @@
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td class="p-3 border-t border-gray-700 font-bold">夏普比率</td>
+                                                <td class="p-3 border-t border-gray-700 font-bold">風險調整報酬</td>
                                                 <td class="p-3 border-t border-gray-700 text-center font-bold text-primary">{{ (performanceMetrics.portfolioCAGR / performanceMetrics.portfolioVol).toFixed(2) }}</td>
                                                 <td class="p-3 border-t border-gray-700 text-center">{{ (performanceMetrics.sp500CAGR / performanceMetrics.sp500Vol).toFixed(2) }}</td>
                                                 <td class="p-3 border-t border-gray-700 text-center" :class="(performanceMetrics.portfolioCAGR / performanceMetrics.portfolioVol) >= (performanceMetrics.sp500CAGR / performanceMetrics.sp500Vol) ? 'text-success' : 'text-error'">
