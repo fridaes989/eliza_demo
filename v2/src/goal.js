@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
 const { createApp, ref, computed, watch, nextTick, onMounted } = Vue;
 
 const app = createApp({
+    components: { 'strategy-card': StrategyCard, 'results-summary': ResultsSummary },
     setup() {
         const isMenuOpen = ref(false);
         const toggleMenu = () => { isMenuOpen.value = !isMenuOpen.value; };
@@ -29,13 +30,27 @@ const app = createApp({
         const goalTypes = ref({});
 
         const inflationRate = 0.03;
+
+        const chartColors = {
+            '股票': 'rgba(58, 134, 255, 1)',    // Blue color at 100% opacity
+            '債券': 'rgba(58, 134, 255, 0.5)',  // Blue color at 75% opacity
+            '黃金': 'rgba(58, 134, 255, 0.5)',   // Blue color at 50% opacity
+            '商品': 'rgba(58, 134, 255, 0.35)',  // Blue color at 35% opacity
+            '其他': 'rgba(58, 134, 255, 0.25)'    // Blue color at 60% opacity
+        };
         
         const strategies = { 
-            '全天候策略': { expectedReturn: 0.037, volatility: 0.09, url: 'all_weather.html', allocation: { 'VTI': 30, 'TLT': 40, 'IEF': 15, 'GLD': 7.5, 'DBC': 7.5 } }, 
-            '三基金組合': { expectedReturn: 0.068, volatility: 0.1256, url: 'classic3.html', allocation: { 'VTI (美國股市)': 60, 'VTIAX (國際股市)': 20, 'BND (債券)': 20 } }, 
-            '積極型股債組合': { expectedReturn: 0.075, volatility: 0.1263, url: 'aggressive.html', allocation: { 'VTI (美國股市)': 70, 'VTIAX (國際股市)': 10, 'BND (債券)': 20 } },
-            '核心四基金': { expectedReturn: 0.069, volatility: 0.125, url: 'core4.html', allocation: { 'VTI (美國股市)': 50, 'VXUS': 20, 'VNQ':10,'BND (債券)': 20 } },
-            '巴菲特推薦': { expectedReturn: 0.123, volatility: 0.152, url: 'voo.html', allocation: { 'VOO': 100} } 
+            '全天候策略': { expectedReturn: 0.037, volatility: 0.09, url: 'all_weather.html', allocation: { 'VTI': 30, 'TLT': 40, 'IEF': 15, 'GLD': 7.5, 'DBC': 7.5 }, simplifiedAllocation: { '股票': 30, '債券': 55, '其他': 15 }, description: '股債比為 30/55，另有 15% 為非股非債資產。' }, 
+            '三基金組合': { expectedReturn: 0.068, volatility: 0.1256, url: 'classic3.html', allocation: { 'VTI (美國股市)': 60, 'VTIAX (國際股市)': 20, 'BND (債券)': 20 }, simplifiedAllocation: { '股票': 80, '債券': 20 }, description: '股債比為 80/20。' }, 
+            '積極型股債組合': { expectedReturn: 0.075, volatility: 0.1263, url: 'aggressive.html', allocation: { 'VTI (美國股市)': 70, 'VTIAX (國際股市)': 10, 'BND (債券)': 20 }, simplifiedAllocation: { '股票': 80, '債券': 20 }, description: '股債比為 80/20。' },
+            '核心四基金': { expectedReturn: 0.069, volatility: 0.125, url: 'core4.html', allocation: { 'VTI (美國股市)': 50, 'VXUS': 20, 'VNQ':10,'BND (債券)': 20 }, simplifiedAllocation: { '股票': 70, '債券': 20, '其他': 10 }, description: '股債比為 70/20，另有 10% 為不動產資產。' },
+            '巴菲特推薦': { expectedReturn: 0.123, volatility: 0.152, url: 'voo.html', allocation: { 'VOO': 100}, simplifiedAllocation: { '股票': 100 }, description: '全壓股票，股債比為 100/0。' } 
+        };
+
+        // 新增工具函式：由報酬率取得波動度
+        const getVolatilityByReturn = (returnValue) => {
+            const match = Object.values(strategies).find(s => s.expectedReturn === returnValue);
+            return match ? match.volatility : null;
         };
 
         const strategyReasons = { 
@@ -46,15 +61,19 @@ const app = createApp({
             '巴菲特推薦': '完全相信並押注於美國最具代表性的 500 家頂級企業的長期增長。'  
         };
 
-        const form = ref({ goalType: 'retirement', currentAge: 25, targetAge: 65, targetValue: 5000, currentAssets: 100, monthlyInvestment: 1000, strategyReturn: 0.05});
+        const form = ref({ goalType: 'retirement', currentAge: 25, targetAge: 65, targetValue: 5000, currentAssets: 100, monthlyInvestment: 1000, strategyReturn: 0.037});
         const formErrors = ref({});
-        const results = ref({ show: false });
+        const results = ref({
+        show: false,
+        strategyAllocation: {}
+        });
         const chartHTML = ref('');
         const recommendationResults = ref([]);
         const savedGoals = ref([]);
-        const isLoggedIn = ref(true); 
+        const charts = {}; // To manage chart instances
         const snackbar = ref({ show: false, message: '', color: 'success' });
 
+        const currentStep = ref(1); // 1 for form, 2 for results
         const showSnackbar = (message, color = 'success', duration = 3000) => {
             snackbar.value = { show: true, message, color };
             setTimeout(() => { snackbar.value.show = false; }, duration);
@@ -132,11 +151,11 @@ const app = createApp({
         });
 
         const strategyOptions = [ 
-            { text: '極保守型 (年化波動 9%)', value: 0.037 }, 
-            { text: '穩健型(年化波動 12.5%)', value: 0.068 }, 
-            { text: '積極型(年化波動 12.6%)', value: 0.075 }, 
-            { text: '增長型(年化波動 12.5%)', value: 0.069 }, 
-            { text: '高風險型(年化波動 > 15%)', value: 0.123 } 
+            { text: '極保守型｜低風險｜年化報酬 <5%', value: 0.037, key: '全天候策略' }, 
+            { text: '穩健型｜中低風險｜年化報酬 6~8%', value: 0.068, key: '三基金組合' }, 
+            { text: '積極型｜中高風險｜年化報酬 8~10%', value: 0.075, key: '積極型股債組合' }, 
+            { text: '增長型｜中高風險｜年化報酬 6~8%', value: 0.069, key: '核心四基金' }, 
+            { text: '高風險型｜波動大｜年化報酬 12.3%', value: 0.123, key: '巴菲特推薦' } 
         ];
         
         watch(() => form.value.goalType, (newType) => { 
@@ -207,8 +226,10 @@ const app = createApp({
         };
 
         const loadSavedGoal = (goal) => {
-            form.value = { ...goal };
-            nextTick(() => { calculate(); showSnackbar('已載入目標並重新計算', 'info'); });
+            form.value = { ...goal }; // Directly update the form
+            calculate();
+            currentStep.value = 2; // Go to results page
+            showSnackbar('已載入目標並重新計算', 'info');
         };
 
         const deleteSavedGoal = async (index) => {
@@ -236,7 +257,7 @@ const app = createApp({
             } else if (num >= 1000) {
                 formattedValue = (num / 1000).toFixed(1) + 'K';
             } else {
-                formattedValue = num.toString();
+                formattedValue = num.toLocaleString();
             }
             return `${formattedValue} 美元`;
         };
@@ -296,7 +317,34 @@ const app = createApp({
             const investmentProjection = calculateAccumulatedInvestment(years, monthlyInvestUSD, currentAssetsUSD); 
             
             const finalAsset = assetsProjection[assetsProjection.length - 1]; 
-            results.value = { show: true, isGoalAchieved: finalAsset >= goalAmount, finalAsset, goalAmount, years }; 
+            const totalInvestment = currentAssetsUSD + (monthlyInvestUSD * 12 * years);
+            const investmentGrowth = finalAsset - totalInvestment;
+            const growthMultiple = finalAsset / totalInvestment; // 資產/成本 倍數
+
+            // 取得該策略的波動度
+            const vol = getVolatilityByReturn(form.value.strategyReturn);
+
+            const selectedOption = strategyOptions.find(opt => opt.value === form.value.strategyReturn);
+            const chosenStrategy = selectedOption ? strategies[selectedOption.key] : null;
+
+            results.value = { 
+                show: true, 
+                isGoalAchieved: finalAsset >= goalAmount, 
+                finalAsset, 
+                goalAmount, 
+                years,
+                totalInvestment,
+                investmentGrowth,
+                growthMultiple,
+                strategyName: selectedOption ? selectedOption.key : null,
+                strategyReturn: chosenStrategy ? chosenStrategy.expectedReturn : null,
+                strategyVolatility: chosenStrategy ? chosenStrategy.volatility : null,
+                strategyAllocation: chosenStrategy ? chosenStrategy.allocation : {},
+                strategyReason: selectedOption ? strategyReasons[selectedOption.key] : null,
+                simplifiedAllocation: chosenStrategy ? chosenStrategy.simplifiedAllocation : {},
+                strategyDescription: chosenStrategy ? chosenStrategy.description : '',
+                currentAssets: currentAssetsUSD, // Add current assets to results
+            };
             
             if (!results.value.isGoalAchieved) { 
                 results.value.requiredReturn = calcRequiredReturn(goalAmount, years, monthlyInvestUSD, currentAssetsUSD); 
@@ -304,6 +352,7 @@ const app = createApp({
             } 
             updateStrategyRecommendations(goalAmount, years, currentAssetsUSD); 
             renderCustomChart(assetsProjection, investmentProjection, goalAmount, years); 
+            currentStep.value = 2; // Switch to results view
         };
 
         const calcRequiredReturn = (target, years, monthlyInvestUSD, startAssetsUSD) => { 
@@ -350,104 +399,96 @@ const app = createApp({
                 const calcResult = calculateRequiredMonthlyInvestmentForStrategy(goalAmount, years, strategy.expectedReturn, currentAssetsUSD); 
                 return { name, strategy, requiredMonthly: calcResult.amount, isMetByInitial: calcResult.isMetByInitial }; 
             }); 
-            const bestStrategy = recommendations.reduce((best, current) => { 
-                return current.requiredMonthly < best.requiredMonthly ? current : best; 
-            }, recommendations[0]); 
             recommendationResults.value = recommendations.map(rec => ({ 
                 name: rec.name, 
                 expectedReturn: rec.strategy.expectedReturn, 
                 requiredMonthly: rec.requiredMonthly, 
-                reason: strategyReasons[rec.name], 
-                isBest: rec.name === bestStrategy.name, 
-                isMetByInitial: rec.isMetByInitial,
-                url: rec.strategy.url
-            })); 
+                reason: strategyReasons[rec.name], isMetByInitial: rec.isMetByInitial,
+                url: rec.strategy.url,
+                simplifiedAllocation: rec.strategy.simplifiedAllocation,
+                volatility: rec.strategy.volatility
+            }));
         };
-
+        
+        // === MODIFICATION START: Reverted to Bar Chart renderer ===
         const renderCustomChart = (assetsProjection, investmentProjection, goal, totalYears) => {
-            const width = 800;
-            const height = 400;
-            const padding = { top: 20, right: 80, bottom: 50, left: 80 };
-            const allValues = [...assetsProjection, goal];
-            const maxValue = Math.max(...allValues);
-            const xScale = (i) => padding.left + (i / totalYears) * (width - padding.left - padding.right);
-            const yScale = (value) => height - padding.bottom - (value / maxValue) * (height - padding.top - padding.bottom);
-            const dataPoints = Array.from({ length: totalYears + 1 }, (_, i) => ({
-                year: i,
-                currentAge: form.value.currentAge + i,
-                totalAsset: assetsProjection[i] || 0,
-                totalInvestment: investmentProjection[i] || 0,
-                growth: Math.max(0, (assetsProjection[i] || 0) - (investmentProjection[i] || 0))
-            }));
-            const toPath = (points) => {
-                let path = `M ${points[0].x} ${points[0].y}`;
-                points.slice(1).forEach(p => path += ` L ${p.x} ${p.y}`);
-                return path;
+            const maxValue = Math.max(goal, ...assetsProjection);
+            
+            const generateChartYears = (total) => {
+                const years = new Set([0]);
+                if (total > 0) years.add(1);
+
+                let increment = 5;
+                if (total > 20) increment = 10;
+                
+                for (let y = increment; y < total; y += increment) {
+                    years.add(y);
+                }
+
+                if (total > 1) years.add(total);
+                
+                return Array.from(years).sort((a, b) => a - b);
             };
-            const investmentPoints = dataPoints.map(d => ({ x: xScale(d.year), y: yScale(d.totalInvestment) }));
-            const investmentAreaPath = toPath(investmentPoints) + ` L ${xScale(totalYears)} ${height - padding.bottom} L ${padding.left} ${height - padding.bottom} Z`;
-            const totalAssetPoints = dataPoints.map(d => ({ x: xScale(d.year), y: yScale(d.totalAsset) }));
-            const growthAreaPath = toPath(totalAssetPoints) + ` L ` + toPath(investmentPoints.slice().reverse()).substring(1) + ` Z`;
-            const xAxisTicks = dataPoints.filter(d => d.year % 5 === 0 || d.year === totalYears || d.year === 0).map(d => ({
-                x: xScale(d.year),
-                label: `${d.year}年後`,
-                ageLabel: `(${d.currentAge}歲)`
-            }));
-            const yAxisTicks = Array.from({ length: 6 }, (_, i) => {
-                const value = (i / 5) * maxValue;
-                return { y: yScale(value), label: formatCurrency(value) };
-            });
-            let svgContent = `<svg width="100%" viewBox="0 0 ${width} ${height}" class="chart-svg" style="font-family: Arial, sans-serif;">`;
-            yAxisTicks.forEach(tick => {
-                svgContent += `<line x1="${padding.left}" y1="${tick.y}" x2="${width - padding.right}" y2="${tick.y}" stroke="#374151" stroke-width="0.5"/>`;
-                svgContent += `<text x="${padding.left - 8}" y="${tick.y + 4}" text-anchor="end" fill="#9CA3AF" font-size="12px">${tick.label}</text>`;
-            });
-            svgContent += `<path d="${investmentAreaPath}" fill="rgba(66, 153, 225, 0.7)" />`;
-            svgContent += `<path d="${growthAreaPath}" fill="rgba(64, 160, 128, 0.7)" />`;
-            const goalLineY = yScale(goal);
-            if (goal > 0 && goal < maxValue * 1.1) {
-                const goalText = `目標 ${formatCurrency(goal)}`;
-                const textWidth = goalText.length * 7;
-                svgContent += `<line x1="${padding.left}" y1="${goalLineY}" x2="${width - padding.right - textWidth - 15}" y2="${goalLineY}" stroke="#f87171" stroke-width="2" stroke-dasharray="4,4"/>`;
-                svgContent += `<rect x="${width - padding.right - textWidth - 10}" y="${goalLineY - 12}" width="${textWidth + 10}" height="24" fill="#f87171" rx="4"/>`;
-                svgContent += `<text x="${width - padding.right - 5}" y="${goalLineY + 5}" text-anchor="end" fill="white" font-size="12px" font-weight="bold">${goalText}</text>`;
-            }
-            xAxisTicks.forEach(tick => {
-                svgContent += `<g transform="translate(${tick.x}, ${height - padding.bottom})">
-                    <text text-anchor="middle" fill="#9CA3AF" font-size="12px" y="20">${tick.label}</text>
-                    <text text-anchor="middle" fill="#9CA3AF" font-size="10px" y="35">${tick.ageLabel}</text>
-                </g>`;
-            });
-            const sliceWidth = (width - padding.left - padding.right) / (totalYears > 0 ? totalYears : 1);
-            dataPoints.forEach(d => {
-                const tooltipContent = `<strong>${d.year}年後 (${d.currentAge}歲)</strong><br>總資產: ${formatCurrency(d.totalAsset)}<br>累積投資成本: ${formatCurrency(d.totalInvestment)}<br>投資增長收益: ${formatCurrency(d.growth)}`;
-                svgContent += `<rect x="${xScale(d.year) - sliceWidth / 2}" y="${padding.top}" width="${sliceWidth}" height="${height - padding.top - padding.bottom}" fill="transparent"
-                    onmouseover='window.appInstance.showTooltip(event, "${tooltipContent}")'
-                    onmousemove="window.appInstance.moveTooltip(event)"
-                    onmouseout="window.appInstance.hideTooltip()"/>`;
-            });
-            svgContent += `</svg>`;
-            const legendHTML = `
-                <div class="chart-legend flex justify-center gap-4 mb-2">
-                    <div class="legend-item flex items-center text-sm">
-                        <div class="w-3 h-3 rounded-full mr-2" style="background-color: rgba(66, 153, 225, 0.7);"></div>
-                        <span>累積投資成本</span>
+
+            const chartYears = generateChartYears(totalYears);
+
+            const legendHTML = `<div class="chart-legend"><div class="legend-item"><div class="legend-color" style="background: linear-gradient(to top, #3182ce 0%, #4299e1 100%);"></div><span>累積投資成本</span></div><div class="legend-item"><div class="legend-color" style="background: linear-gradient(to top, #208065 0%, #40A080 100%);"></div><span>投資增長收益</span></div></div>`;
+            
+            let barsHTML = chartYears.map(year => {
+                if (year > totalYears) return '';
+                const totalAsset = assetsProjection[year] || 0;
+                const totalInvestment = investmentProjection[year] || 0;
+                const growth = Math.max(0, totalAsset - totalInvestment);
+
+                const totalHeightPercent = maxValue > 0 ? (totalAsset / maxValue) * 100 : 0;
+                const investmentHeightPercent = totalAsset > 0 ? (totalInvestment / totalAsset) * 100 : 0;
+                const growthHeightPercent = totalAsset > 0 ? (growth / totalAsset) * 100 : 0;
+
+                const shortFormatCurrency = (val) => {
+                     if (val >= 1000000) return (val / 1000000).toFixed(2) + 'M';
+                     if (val >= 1000) return (val / 1000).toFixed(1) + 'K';
+                     return val.toLocaleString();
+                }
+
+                const tooltipContent = `<strong>${year}年後 (${form.value.currentAge + year}歲)</strong><br>總資產: ${formatCurrency(totalAsset)}<br>累積投資成本: ${formatCurrency(totalInvestment)}<br>投資增長收益: ${formatCurrency(growth)}`;
+                
+                return `<div class="bar" style="height: ${totalHeightPercent}%;" onmouseover='window.appInstance.showTooltip(event, "${tooltipContent}")' onmousemove="window.appInstance.moveTooltip(event)" onmouseout="window.appInstance.hideTooltip()">
+                            <div class="bar-value text-md">$ ${shortFormatCurrency(totalAsset)}</div>
+                            <div class="bar-segment growth" style="height: ${growthHeightPercent}%;"></div>
+                            <div class="bar-segment investment" style="height: ${investmentHeightPercent}%;"></div>
+                        </div>`;
+            }).join('');
+
+            const goalLineBottomPercent = Math.min(maxValue > 0 ? (goal / maxValue) * 100 : 0, 95);
+
+            let labelsHTML = chartYears.map(year => {
+                const labelText = year === 0 ? `起始金額` : `${year}年後`;
+                return `<div class="bar-label">
+                            <span class="year-text text-xs">${labelText}</span>
+                            <span class="age-text text-xs">(${form.value.currentAge + year}歲)</span>
+                        </div>`;
+            }).join('');
+
+            chartHTML.value = `${legendHTML}
+                <div class="bar-chart mt-6">
+                    <div class="bars-container mt-6">
+                        <div class="goal-line" style="bottom: ${goalLineBottomPercent}%;">
+                            <div class="goal-label">目標 ${formatCurrency(goal)}</div>
+                        </div>
+                        ${barsHTML}
                     </div>
-                    <div class="legend-item flex items-center text-sm">
-                        <div class="w-3 h-3 rounded-full mr-2" style="background-color: rgba(64, 160, 128, 0.7);"></div>
-                        <span>投資增長收益</span>
-                    </div>
-                </div>
-            `;
-            chartHTML.value = legendHTML + svgContent;
+                    <div class="labels-container">${labelsHTML}</div>
+                </div>`;
         };
+        // === MODIFICATION END ===
 
         return { 
-            form, formErrors, results, chartHTML, recommendationResults, savedGoals, isLoggedIn, snackbar,
+            isMenuOpen, toggleMenu,
+            form, formErrors, results, chartHTML, recommendationResults, savedGoals, snackbar, currentStep,
             goalTypes, pageTitle, targetCurrentAge, targetAgeLabel, targetAmountLabel, monthlyInvestmentLabel, resultsTitle, 
             calculateButtonText, goalOptions, strategyOptions, calculate,
             saveGoal, loadSavedGoal, deleteSavedGoal, showTooltip, moveTooltip, hideTooltip,
-            getCalculatedTargetAmount, calculateGoalProgress, formatCurrency
+            getCalculatedTargetAmount, calculateGoalProgress, formatCurrency, chartColors,
         };
     }
 });
