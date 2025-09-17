@@ -55,9 +55,12 @@ body {
     height: 400px;
     position: relative;
     border-radius: 8px;
-    padding: 20px 10px 10px 10px;
+    /* padding: 20px 10px 10px 10px;*/
     box-sizing: border-box;
 }
+.risk-low { background-color: #10b981; }   /* 綠色 */
+.risk-mid { background-color: #facc15; color: black; } /* 黃色 */
+.risk-high { background-color: #ef4444; }  /* 紅色 */
 
 /* In style.css, ensure your .bars-container rule looks like this */
 .bars-container {
@@ -106,9 +109,7 @@ body {
 .bar-segment.growth { background: linear-gradient(to top, #208065 0%, #40A080 100%); border-radius: 4px 4px 0 0; }
 .bar-value { position: absolute; top: -22px; width: 100%; text-align: center; font-size: 12px; font-weight: bold; color: #ffffff; }
 .labels-container { display: flex; justify-content: center; align-items: flex-start; width: 100%; margin-top: 8px; gap: 1.5%; }
-.bar-label { max-width: 100px; flex: 1 1 0; text-align: center; font-size: 11px; color: rgb(255, 255, 255); line-height: 1.2; display: flex; flex-direction: column; align-items: center; }
-.year-text { font-weight: 600; margin-bottom: 2px; }
-.age-text { font-size: 10px; }
+.bar-label { max-width: 100px; flex: 1 1 0; text-align: center; color: rgb(255, 255, 255); line-height: 1.2; display: flex; flex-direction: column; align-items: center; }
 
 /* Tooltip Styles (retained for custom chart) */
 .chart-tooltip {
@@ -211,10 +212,10 @@ body {
 
 /* Mobile responsive styles for custom bar chart */
 @media (max-width: 768px) {
-    .bar-chart { height: 350px; padding: 15px 8px 10px 8px; }
+    /* .bar-chart { height: 350px; padding: 15px 8px 10px 8px; }*/
     .bars-container { height: 250px; }
     .bar { min-width: 45px; }
-    .bar-label { min-width: 45px; font-size: 10px; }
+    /* .bar-label { min-width: 45px; font-size: 10px; } */
     .goal-line {
         /* Use left/right to respect container padding instead of width/calc */
         left: 5px;
@@ -229,14 +230,47 @@ body {
       }
 }
 @media (max-width: 480px) {
-    .bar-chart { height: 320px; padding: 10px 5px 8px 5px; }
+     .bar-chart { height: 320px; }
     .bars-container { height: 220px; }
     .bar { min-width: 35px; }
-    .bar-label { min-width: 35px; font-size: 9px; }
+    /* .bar-label { min-width: 35px; font-size: 9px; } */
     .bar-value { font-size: 10px; top: -20px; }
     .goal-label {
         font-size: 10px;
         padding: 1px 4px;
         white-space: nowrap; /* Keep text on one line */
+      }
+}
+/* Mobile responsive styles for custom bar chart */
+@media (max-width: 768px) {
+    /* .bar-chart { height: 350px; padding: 15px 8px 10px 8px; }*/
+    .bars-container { 
+      height: 250px; 
+      /* 允許橫向滾動，避免擠壓 */
+      overflow-x: auto;
+    }
+    .bar { min-width: 45px; }
+    /* .bar-label { min-width: 45px; font-size: 10px; } */
+    .goal-line {
+        left: 5px;
+        right: 5px;
+        width: auto;
+      }
+    
+      .goal-label {
+        white-space: nowrap;
+        right: 5px;
+      }
+}
+@media (max-width: 480px) {
+    /* .bar-chart { height: 320px; padding: 10px 5px 8px 5px; } */
+    .bars-container { height: 220px; }
+    .bar { min-width: 35px; }
+    /* .bar-label { min-width: 35px; font-size: 9px; } */
+    .bar-value { font-size: 10px; top: -20px; }
+    .goal-label {
+        font-size: 10px;
+        padding: 1px 4px;
+        white-space: nowrap;
       }
 }
