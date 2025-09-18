@@ -7,8 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="src/tailwind.config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="src/style.css">
     <link href="https://cdn.jsdelivr.net/npm/@mdi/font@5.x/css/materialdesignicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="src/style.css">
     <link rel="icon" href="img/favicon.ico" type="image/x-icon">
     <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
 </head>
@@ -120,7 +120,44 @@
                                             <i class="mdi mdi-content-save"></i> 儲存目標
                                         </button>
                                     </div>
-                                    <!-- 對應的策略卡 -->
+                                   
+
+                                     <!-- 模擬摘要 -->
+                                     <div class="p-4 rounded-lg border border-gray-700 bg-surface mb-6">
+                                        <div class="flex items-center mb-2">
+                                            <i class="mdi mdi-piggy-bank mr-2 text-3xl"></i>
+                                            <h3 class="text-lg font-bold"> 模擬摘要</h3>
+                                        </div> 
+                                        <p class="text-sm text-gray-300 leading-relaxed">
+                                            根據此策略與設定，預估 <span class="font-bold text-lg">{{ results.years }}</span> 年後，
+                                            您的資產預計將成長至 
+                                            <span class="font-bold text-primary text-lg">{{ formatCurrency(results.finalAsset) }}</span>。
+                                            累積投資成本約為 
+                                            <span class="font-bold text-primary text-lg">{{ formatCurrency(results.totalInvestment) }}</span>，
+                                            累積資產為成本的 
+                                            <span class="font-bold text-primary text-lg">{{ results.growthMultiple.toFixed(1) }} 倍</span>。
+                                        </p>
+                                    </div>
+                                    <!-- 能否達成 如何達成 -->
+                                    <div class="p-4 rounded-lg border mb-6"
+                                        :class="results.isGoalAchieved ? 'bg-primary/20 border-success/30' : 'bg-error/20 border-warning/30'">
+                                        <h3 class="font-bold text-lg mb-2 flex items-center gap-2">
+                                            <i v-if="results.isGoalAchieved" class="mdi mdi-party-popper text-2xl"></i>
+                                            <i v-else class="mdi mdi-emoticon-cry text-2xl"></i>
+                                            {{ results.isGoalAchieved ? '可達成目標！' : '目前策略無法達成目標' }}
+                                        </h3>
+                                        <p class="text-sm">目標金額：<span class="font-bold text-lg">{{ formatCurrency(results.goalAmount) }}</span></p>
+                                        <p class="text-sm">最終資產：<span class="font-bold text-lg">{{ formatCurrency(results.finalAsset) }}</span></p>
+                                        <p v-if="!results.isGoalAchieved" class="text-sm text-error">
+                                        資金缺口：<span class="font-bold text-error text-lg">{{ formatCurrency(results.goalAmount - results.finalAsset) }}</span>
+                                        </p>
+                                        <p v-if="results.goalAmount > 0" class="text-sm mt-2 pt-2 border-t border-gray-700/50">
+                                            目前資產約為目標的 <span class="font-bold text-lg text-tone">{{ (results.currentAssets / results.goalAmount * 100).toFixed(1) }}%</span>
+                                        </p>
+                                    </div>
+                                    
+                                    <div class="bg-surface rounded-lg px-2 py-6"><div id="customChart" v-html="chartHTML"></div></div>
+                                     <!-- 對應的策略卡 -->
                                     <div v-if="results.show" class="v-card p-4 rounded-lg border border-gray-700 bg-surface mb-6">
                                         <div class="flex items-center mb-2">
                                             <i class="mdi mdi-marker-check mr-2 text-white text-2xl"></i>
@@ -161,51 +198,15 @@
                                         
                                     </div>
                                     <!-- 對應的策略卡 end -->
-
-                                     <!-- 模擬摘要 -->
-                                     <div class="p-4 rounded-lg border border-gray-700 bg-surface mb-6">
-                                        <div class="flex items-center mb-2">
-                                            <i class="mdi mdi-piggy-bank mr-2 text-3xl"></i>
-                                            <h3 class="text-lg font-bold"> 模擬摘要</h3>
-                                        </div> 
-                                        <p class="text-sm text-gray-300 leading-relaxed">
-                                            根據此策略與您的設定來計算，預估 <span class="font-bold text-lg">{{ results.years }}</span> 年後，
-                                            您的資產預計將成長至 
-                                            <span class="font-bold text-primary text-lg">{{ formatCurrency(results.finalAsset) }}</span>。<br>
- 
-                                            累積投資成本約為 
-                                            <span class="font-bold text-primary text-lg">{{ formatCurrency(results.totalInvestment) }}</span>，
-                                            累積資產為成本的 
-                                            <span class="font-bold text-primary text-lg">{{ results.growthMultiple.toFixed(1) }} 倍</span>。
-                                        </p>
-                                    </div>
-                                    <!-- 能否達成 如何達成 -->
-                                    <div class="p-4 rounded-lg border mb-6"
-                                        :class="results.isGoalAchieved ? 'bg-primary/20 border-success/30' : 'bg-error/20 border-warning/30'">
-                                        <h3 class="font-bold text-lg mb-2 flex items-center gap-2">
-                                            <i v-if="results.isGoalAchieved" class="mdi mdi-party-popper text-2xl"></i>
-                                            <i v-else class="mdi mdi-emoticon-cry text-2xl"></i>
-                                            {{ results.isGoalAchieved ? '可達成目標！' : '目前策略無法達成目標' }}
-                                        </h3>
-                                        <p class="text-sm">目標金額：<span class="font-bold text-lg">{{ formatCurrency(results.goalAmount) }}</span></p>
-                                        <p class="text-sm">最終資產：<span class="font-bold text-lg">{{ formatCurrency(results.finalAsset) }}</span></p>
-                                        <p v-if="!results.isGoalAchieved" class="text-sm text-error">
-                                        資金缺口：<span class="font-bold text-error text-lg">{{ formatCurrency(results.goalAmount - results.finalAsset) }}</span>
-                                        </p>
-                                    </div>
-                                    
-                                    <div class="bg-surface rounded-lg px-2 py-6"><div id="customChart" v-html="chartHTML"></div></div>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                                        
-
                                         <div v-if="!results.isGoalAchieved" class="p-4 rounded-lg bg-secondary/20 border border-secondary mt-6 text-sm">
                                             <h3 class="font-bold text-lg mb-2"> <i class="mdi mdi-lightbulb-on mr-2 text-2xl"></i> 達成目標的可能方式</h3>
                                             <ul class="text-sm space-y-2">
                                                 <li class="flex items-center">
-                                                    將年化報酬率提高至 <i class="mdi mdi-chevron-double-up mr-2 text-primary text-4xl"></i> <span class="text-2xl text-primary"> {{ results.requiredReturn.toFixed(1) }}%</span> 
+                                                    將年化報酬率提高至 <i class="mdi mdi-chevron-double-up mx-2 text-primary text-3xl"></i> <span class="text-2xl text-primary">{{ results.requiredReturn.toFixed(1) }}%</span> 
                                                 </li>
                                                 <li class="flex items-center"> 
-                                                    將每月投資金額提高至 <i class="mdi mdi-cash-plus mr-2 text-primary text-4xl"></i><span class="text-2xl text-primary">{{ formatCurrency(results.requiredInvestment) }}</span>
+                                                    將每月投資金額提高至 <i class="mdi mdi-cash-plus mx-2 text-primary text-3xl"></i><span class="text-2xl text-primary">{{ formatCurrency(results.requiredInvestment) }}</span>
                                                 </li>
                                             </ul>
                                             <p class="text-xs text-gray-400 mt-3">（以上為模擬參考數值，高報酬通常伴隨高風險，實際結果可能因市場波動有所不同）</p>
@@ -226,11 +227,12 @@
                             <i class="mdi mdi-finance mr-2 text-6xl"></i>
                             <h2 class="font-bold mb-4">策略投資組合建議</h2>
                             <p class="text-center text-xs text-gray-400 mb-6">請依照您的風險承受度選擇合適策略，而非單純追求最高報酬</p>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                <a v-for="rec in recommendationResults.filter(r => r.name !== results.strategyName)" :key="rec.name" :href="rec.url" target="_blank" class="block bg-surface rounded-lg p-4 transition-all duration-300 hover:scale-105 hover:shadow-lg border-2 border-transparent">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div v-for="rec in recommendationResults.filter(r => r.name !== results.strategyName)" :key="rec.name" class="bg-surface rounded-lg p-4 flex flex-col">
+                                    <i class="mdi text-3xl text-primary" :class="rec.icon || 'mdi-chart-line'"></i> 
                                     <h4 class="font-bold text-lg text-center mb-2">{{ rec.name }}</h4>
                                     <p class="text-xs text-gray-400 mb-3 text-center">{{ rec.reason }}</p>
-                                    
+
                                     <div class="grid grid-cols-3 gap-2 mt-4 text-center text-xs text-gray-400">
                                         <div class="p-1">
                                             <div>風險等級</div>
@@ -256,9 +258,14 @@
                                         </div>
                                     </div>
 
-                                    <div v-if="rec.isMetByInitial" class="text-center text-tone/80 text-sm p-2 rounded-md bg-surface">✔️ 可用現有的月投金額達成目標</div>
-                                    <div v-else class="text-center font-bold text-sm bg-primary-gradient text-white-hover p-2 rounded-md">建議月投：{{ formatCurrency(rec.requiredMonthly) }}</div>
-                                </a>
+                                    <div class="mt-auto pt-4">
+                                        <div v-if="rec.isMetByInitial" class="text-center font-bold text-success text-sm p-2 rounded-md bg-success/10 mb-2">✔️ 現有月投金額足以達成目標</div>
+                                        <div v-else class="text-center font-bold text-sm bg-primary-gradient text-white-hover p-2 rounded-md mb-2">建議月投：{{ formatCurrency(rec.requiredMonthly) }}</div>
+                                        <a :href="rec.url" target="_blank" class="block w-full text-center bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md transition-colors">
+                                            查看詳情
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </transition>
