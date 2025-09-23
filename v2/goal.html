@@ -92,7 +92,7 @@
                                 <div v-if="slot.savedData" class="mt-auto">
                                     <div class="flex justify-between text-xs text-gray-400 pt-4 mb-2">
                                         <span>當前: {{ (slot.savedData.currentAssets).toLocaleString() }}萬美元</span>
-                                        <span>目標: {{ formatCurrency(getCalculatedTargetAmount(slot.savedData)) }}</span>
+                                        <span>目標: {{ formatCurrency(getCalculatedTargetAmount(slot.savedData), '美元') }}</span>
                                     </div>
                                     <div class="w-full bg-gray-700 rounded-full h-4 relative">
                                         <div class="bg-success h-4 rounded-full" :style="{width: calculateGoalProgress(slot.savedData) + '%'}"></div>
@@ -158,9 +158,9 @@
                                         <p class="text-sm text-gray-300 leading-relaxed">
                                             根據此策略與設定，預估 <span class="font-bold text-lg">{{ results.years }}</span> 年後，
                                             您的資產預計將成長至 
-                                            <span class="font-bold text-primary text-lg">{{ formatCurrency(results.finalAsset) }}</span>。
+                                            <span class="font-bold text-primary text-lg">{{ formatCurrency(results.finalAsset, '美元') }}</span>。
                                             累積投資成本約為 
-                                            <span class="font-bold text-primary text-lg">{{ formatCurrency(results.totalInvestment) }}</span>，
+                                            <span class="font-bold text-primary text-lg">{{ formatCurrency(results.totalInvestment, '美元') }}</span>，
                                             累積資產為成本的 
                                             <span class="font-bold text-primary text-lg">{{ results.growthMultiple.toFixed(1) }} 倍</span>。
                                         </p>
@@ -174,10 +174,10 @@
                                                 <i v-else class="mdi mdi-emoticon-cry text-2xl"></i>
                                                 {{ results.isGoalAchieved ? '可達成目標！' : '目前策略無法達成目標' }}
                                             </h3>
-                                            <p class="text-sm">目標金額：<span class="font-bold text-lg">{{ formatCurrency(results.goalAmount) }}</span></p>
-                                            <p class="text-sm">最終資產：<span class="font-bold text-lg">{{ formatCurrency(results.finalAsset) }}</span></p>
+                                            <p class="text-sm">目標金額：<span class="font-bold text-lg">{{ formatCurrency(results.goalAmount, '美元') }}</span></p>
+                                            <p class="text-sm">最終資產：<span class="font-bold text-lg">{{ formatCurrency(results.finalAsset, '美元') }}</span></p>
                                             <p v-if="!results.isGoalAchieved" class="text-sm text-error">
-                                            資金缺口：<span class="font-bold text-error text-lg">{{ formatCurrency(results.goalAmount - results.finalAsset) }}</span>
+                                            資金缺口：<span class="font-bold text-error text-lg">{{ formatCurrency(results.goalAmount - results.finalAsset, '美元') }}</span>
                                             </p>
                                             <p v-if="results.goalAmount > 0" class="text-sm mt-2 pt-2 border-t border-gray-700/50">
                                                 目前資產約為目標的 <span class="font-bold text-lg text-tone">{{ (results.currentAssets / results.goalAmount * 100).toFixed(1) }}%</span>
@@ -191,7 +191,7 @@
                                                     提升年化報酬率至：<i class="mdi mdi-chevron-double-up ml-2 text-warning text-3xl"></i> <span class="text-lg font-bold text-warning">{{ results.requiredReturn.toFixed(1) }}%</span> 
                                                 </li>
                                                 <li class="flex items-center"> 
-                                                    提高每月投資金額：<i class="mdi mdi-cash-plus mx-2 text-warning text-3xl"></i><span class="text-lg font-bold text-warning">{{ formatCurrency(results.requiredInvestment) }}</span>
+                                                    提高每月投資金額：<i class="mdi mdi-cash-plus mx-2 text-warning text-3xl"></i><span class="text-lg font-bold text-warning">{{ formatCurrency(results.requiredInvestment, form.goalType === 'retirement' ? '美元' : '萬美元') }}</span>
                                                 </li>
                                             </ul>
                                             <p class="text-xs text-gray-400 mt-3">（以上為模擬參考數值，高報酬通常伴隨高風險，實際結果可能因市場波動有所不同）</p>
@@ -229,19 +229,21 @@
                     
                     <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0" enter-to-class="opacity-100">
                         <div v-if="results.show" class="mt-8  text-center">
-                            <h2 class="font-bold my-2 text-xl">策略投資組合建議</h2>
+                            <h2 class="font-bold pt-4 my-2 text-xl">策略投資組合建議</h2>
                             <p class="text-center text-sm text-gray-400 mb-6 pb-2">請依照您的風險承受度選擇合適策略，而非單純追求最高報酬</p>
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <div v-for="(rec, index) in recommendationResults.filter(r => r.name !== results.strategyName)" :key="rec.name" class="flex flex-col bg-surface rounded-lg">
+                            <div class="flex space-x-4 overflow-x-auto pb-4 -mb-4">
+                                <div v-for="(rec, index) in recommendationResults.filter(r => r.name !== results.strategyName)" :key="rec.name" 
+                                     class="flex flex-col bg-surface rounded-lg flex-shrink-0 w-72">
                                     
                                     <strategy-card :strategy="rec" :chart-colors="chartColors" :is-recommendation="false" :card-number="index + 1" class="flex-grow"></strategy-card>
                                     <div class="px-4 pb-1">
                                         <div v-if="rec.isMetByInitial" class="text-center font-bold text-white text-sm p-2 rounded-md bg-primary-gradient/10 mb-2">✔️ 現有月投金額足以達成目標</div>
-                                        <div v-else class="text-center font-bold text-sm bg-primary-gradient text-white-hover p-2 rounded-md mb-2">建議月投：{{ formatCurrency(rec.requiredMonthly) }}</div>
+                                        <div v-else class="text-center font-bold text-sm bg-primary-gradient text-white-hover p-2 rounded-md mb-2">建議月投：{{ formatCurrency(rec.requiredMonthly, rec.unit) }}</div>
                                     </div>
-                                    <div class="p-4 pt-0">
+                                    <div class="p-4 pt-0 mt-auto">
                                           <a :href="rec.url" target="_blank" class="block w-full text-center bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md transition-colors">查看詳情</a>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
