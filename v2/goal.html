@@ -65,53 +65,80 @@
                 </header>
 
                 <main class="bg-background rounded-lg p-2">
-                    <div class="rounded-lg pb-6" v-if="savedGoals.length > 0">
+                    <div class="rounded-lg pb-6" v-if="allGoalSlots.length > 0">
                         <h3 class="text-xl font-semibold mb-4 flex items-center "><i class="mdi mdi-bookmark-outline mr-2"></i>已存目標</h3>
-                        <div class="space-y-3">
-                            <div v-for="(goal, index) in savedGoals" :key="index" class="p-3 border border-gray-700 rounded-lg cursor-pointer hover:bg-surface transition-colors" @click="loadSavedGoal(goal)">
-                                <div class="flex justify-between items-start">
+                        <div class="flex space-x-4 overflow-x-auto pb-4 -mb-4">
+                            <div v-for="slot in allGoalSlots" :key="slot.key" 
+                                 class="p-4 border rounded-lg transition-colors flex-shrink-0 w-72 flex flex-col"
+                                 :class="{ 
+                                     'border-primary/50 bg-surface hover:border-primary cursor-pointer': slot.savedData,
+                                     'border-gray-800 bg-surface/30 hover:bg-surface/60 text-gray-500 cursor-pointer': !slot.savedData 
+                                 }"
+                                 @click="slot.savedData ? loadSavedGoal(slot.savedData) : selectUnsavedGoal(slot.key)">
+                                
+                                <div class="flex justify-between items-start mb-2">
                                     <div>
-                                        <div class="font-bold">{{ goalTypes[goal.goalType] ? goalTypes[goal.goalType].title : '目標' }}</div>
-                                        <div class="text-xs text-gray-400 mt-1">{{ goal.currentAge }}歲 → {{ goal.targetAge }}歲 | 目標: {{ goal.targetValue.toLocaleString() }} {{ goal.goalType === 'retirement' ? '美元' : '萬美元' }}</div>
+                                        <div class="font-bold flex items-center gap-2" :class="{'text-white': slot.savedData}">
+                                            <i class="mdi text-xl" :class="[slot.icon, slot.savedData ? 'text-primary' : 'text-gray-500']"></i>
+                                            <span>{{ slot.title }}</span>
+                                        </div>
+                                        <div v-if="slot.savedData" class="text-xs text-gray-400 mt-1">
+                                            {{ slot.savedData.currentAge }}歲 → {{ slot.savedData.targetAge }}歲 | 目標: {{ slot.savedData.targetValue.toLocaleString() }} {{ slot.savedData.goalType === 'retirement' ? '美元(月)' : '萬美元' }}
+                                        </div>
+                                        <div v-else class="text-xs mt-1 ml-1">尚未設定</div>
                                     </div>
-                                    <button @click.stop="deleteSavedGoal(index)" class="text-gray-500 hover:text-error transition-colors"><i class="mdi mdi-delete"></i></button>
+                                    <button v-if="slot.savedData" @click.stop="deleteSavedGoal(savedGoals.findIndex(g => g.goalType === slot.key))" class="text-gray-500 hover:text-error transition-colors"><i class="mdi mdi-delete"></i></button>
                                 </div>
-                                <div class="mt-3">
-                                    <div class="flex justify-between text-xs text-gray-400 mb-1">
-                                        <span>當前: {{ (goal.currentAssets).toLocaleString() }}萬美元</span>
-                                        <span>目標: {{ formatCurrency(getCalculatedTargetAmount(goal)) }}</span>
+                                <div v-if="slot.savedData" class="mt-auto">
+                                    <div class="flex justify-between text-xs text-gray-400 pt-4 mb-2">
+                                        <span>當前: {{ (slot.savedData.currentAssets).toLocaleString() }}萬美元</span>
+                                        <span>目標: {{ formatCurrency(getCalculatedTargetAmount(slot.savedData)) }}</span>
                                     </div>
-                                    <div class="w-full bg-surface rounded-full h-1.5"><div class="bg-success h-1.5 rounded-full" :style="{width: calculateGoalProgress(goal) + '%'}"></div></div>
+                                    <div class="w-full bg-gray-700 rounded-full h-4 relative">
+                                        <div class="bg-success h-4 rounded-full" :style="{width: calculateGoalProgress(slot.savedData) + '%'}"></div>
+                                        <div class="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">{{ calculateGoalProgress(slot.savedData).toFixed(0) }}%</div>
+                                    </div>
+                                </div>
+                                <div v-else class="mt-auto">
+                                    <div class="w-full bg-gray-800 rounded-full h-4"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <h2 class="text-2xl font-bold mb-6">{{ pageTitle }} - 基本設定</h2>
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                        <div class="lg:col-span-4 space-y-6">
-                            <div class="rounded-lg">
-                                <div class="space-y-4 text-sm text-gray-400">
-                                    <div><label>選擇財務目標</label><select v-model="form.goalType" class="w-full p-2 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"><option v-for="opt in goalOptions" :value="opt.value">{{ opt.text }}</option></select></div>
-                                    <div>
-                                        <label>{{ targetCurrentAge }}</label>
-                                        <input v-model.number="form.currentAge" type="number" step="0.01" class="w-full p-2 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                                        <p v-if="formErrors.currentAge" class="text-error text-xs mt-1">{{ formErrors.currentAge }}</p>
+
+                    <div id="goal-form-section" class="flex justify-between items-center mb-6 scroll-mt-8">
+                        <h2 class="text-2xl font-bold">{{ pageTitle }} - 基本設定</h2>
+                        <button @click="isFormCollapsed = !isFormCollapsed" class="p-2 rounded-md hover:bg-surface focus:outline-none focus:ring-2 focus:ring-primary" :aria-label="isFormCollapsed ? '展開設定' : '收合設定'">
+                            <i class="mdi text-2xl" :class="isFormCollapsed ? 'mdi-chevron-down' : 'mdi-chevron-up'"></i>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-16">
+                        <div v-if="!isFormCollapsed" class="lg:col-span-4 space-y-6">
+                            <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0">
+                                <div class="rounded-lg text-gray-300">
+                                    <div class="space-y-6">
+                                        <div><label for="goalType" class="text-sm">選擇財務目標</label><select id="goalType" v-model="form.goalType" class="w-full p-3 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-base transition-all"><option v-for="opt in goalOptions" :value="opt.value">{{ opt.text }}</option></select></div>
+                                        <div>
+                                            <label for="currentAge" class="text-sm">{{ targetCurrentAge }}</label>
+                                            <input id="currentAge" v-model.number="form.currentAge" type="number" step="0.01" class="w-full p-3 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-base transition-all">
+                                            <p v-if="formErrors.currentAge" class="text-error text-xs mt-1">{{ formErrors.currentAge }}</p>
+                                        </div>
+                                        <div>
+                                            <label for="targetAge" class="text-sm">{{ targetAgeLabel }}</label>
+                                            <input id="targetAge" v-model.number="form.targetAge" type="number" step="0.01" class="w-full p-3 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-base transition-all">
+                                            <p v-if="formErrors.targetAge" class="text-error text-xs mt-1">{{ formErrors.targetAge }}</p>
+                                        </div>
+                                        <div><label for="targetValue" class="text-sm">{{ targetAmountLabel }}</label><input id="targetValue" v-model.number="form.targetValue" type="number" class="w-full p-3 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-base transition-all"></div>
+                                        <div><label for="currentAssets" class="text-sm">當前總資產 (萬美元)</label><input id="currentAssets" v-model.number="form.currentAssets" type="number" class="w-full p-3 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-base transition-all"></div>
+                                        <div><label for="monthlyInvestment" class="text-sm">{{ monthlyInvestmentLabel }}</label><input id="monthlyInvestment" v-model.number="form.monthlyInvestment" type="number" class="w-full p-3 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-base transition-all"></div>
+                                        <div><label for="strategyReturn" class="text-sm">選擇投資策略</label><select id="strategyReturn" v-model="form.strategyReturn" class="w-full p-3 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary text-base transition-all"><option v-for="opt in strategyOptions" :value="opt.value">{{ opt.text }}</option></select></div>
+                                        <button @click="calculate" class="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3 px-4 rounded-md transition-colors">{{ calculateButtonText }}</button>
                                     </div>
-                                    <div>
-                                        <label>{{ targetAgeLabel }}</label>
-                                        <input v-model.number="form.targetAge" type="number" step="0.01" class="w-full p-2 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
-                                        <p v-if="formErrors.targetAge" class="text-error text-xs mt-1">{{ formErrors.targetAge }}</p>
-                                    </div>
-                                    <div><label>{{ targetAmountLabel }}</label><input v-model.number="form.targetValue" type="number" class="w-full p-2 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"></div>
-                                    <div><label>當前總資產 (萬美元)</label><input v-model.number="form.currentAssets" type="number" class="w-full p-2 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"></div>
-                                    <div><label>{{ monthlyInvestmentLabel }}</label><input v-model.number="form.monthlyInvestment" type="number" class="w-full p-2 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"></div>
-                                    <div><label>選擇投資策略</label><select v-model="form.strategyReturn" class="w-full p-2 mt-1 bg-surface border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"><option v-for="opt in strategyOptions" :value="opt.value">{{ opt.text }}</option></select></div>
-                                    <button @click="calculate" class="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3 px-4 rounded-md transition-colors">{{ calculateButtonText }}</button>
                                 </div>
-                            </div>
+                            </transition>
                         </div>
 
-                        <div class="lg:col-span-8">
+                        <div :class="isFormCollapsed ? 'lg:col-span-12' : 'lg:col-span-8'" class="transition-all duration-300">
                             <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0" enter-to-class="opacity-100" leave-active-class="transition ease-in duration-200" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <div v-if="results.show">
                                     <div class="flex justify-between items-center mb-4">
@@ -137,81 +164,59 @@
                                             累積資產為成本的 
                                             <span class="font-bold text-primary text-lg">{{ results.growthMultiple.toFixed(1) }} 倍</span>。
                                         </p>
-                                    </div>
-                                    <!-- 能否達成 如何達成 -->
-                                    <div class="p-4 rounded-lg border mb-6"
-                                        :class="results.isGoalAchieved ? 'bg-primary/20 border-success/30' : 'bg-error/20 border-warning/30'">
-                                        <h3 class="font-bold text-lg mb-2 flex items-center gap-2">
-                                            <i v-if="results.isGoalAchieved" class="mdi mdi-party-popper text-2xl"></i>
-                                            <i v-else class="mdi mdi-emoticon-cry text-2xl"></i>
-                                            {{ results.isGoalAchieved ? '可達成目標！' : '目前策略無法達成目標' }}
-                                        </h3>
-                                        <p class="text-sm">目標金額：<span class="font-bold text-lg">{{ formatCurrency(results.goalAmount) }}</span></p>
-                                        <p class="text-sm">最終資產：<span class="font-bold text-lg">{{ formatCurrency(results.finalAsset) }}</span></p>
-                                        <p v-if="!results.isGoalAchieved" class="text-sm text-error">
-                                        資金缺口：<span class="font-bold text-error text-lg">{{ formatCurrency(results.goalAmount - results.finalAsset) }}</span>
-                                        </p>
-                                        <p v-if="results.goalAmount > 0" class="text-sm mt-2 pt-2 border-t border-gray-700/50">
-                                            目前資產約為目標的 <span class="font-bold text-lg text-tone">{{ (results.currentAssets / results.goalAmount * 100).toFixed(1) }}%</span>
-                                        </p>
+                                    </div> 
+                                    <div class="grid grid-cols-1 gap-6 mb-6" :class="{ 'sm:grid-cols-2': !results.isGoalAchieved }">
+                                        <!-- 能否達成 -->
+                                        <div class="p-4 rounded-lg border"
+                                            :class="[results.isGoalAchieved ? 'bg-primary/20 border-success/30' : 'bg-error/20 border-warning/30', { 'sm:col-span-1': !results.isGoalAchieved }]">
+                                            <h3 class="font-bold text-lg mb-2 flex items-center gap-2">
+                                                <i v-if="results.isGoalAchieved" class="mdi mdi-party-popper text-2xl"></i>
+                                                <i v-else class="mdi mdi-emoticon-cry text-2xl"></i>
+                                                {{ results.isGoalAchieved ? '可達成目標！' : '目前策略無法達成目標' }}
+                                            </h3>
+                                            <p class="text-sm">目標金額：<span class="font-bold text-lg">{{ formatCurrency(results.goalAmount) }}</span></p>
+                                            <p class="text-sm">最終資產：<span class="font-bold text-lg">{{ formatCurrency(results.finalAsset) }}</span></p>
+                                            <p v-if="!results.isGoalAchieved" class="text-sm text-error">
+                                            資金缺口：<span class="font-bold text-error text-lg">{{ formatCurrency(results.goalAmount - results.finalAsset) }}</span>
+                                            </p>
+                                            <p v-if="results.goalAmount > 0" class="text-sm mt-2 pt-2 border-t border-gray-700/50">
+                                                目前資產約為目標的 <span class="font-bold text-lg text-tone">{{ (results.currentAssets / results.goalAmount * 100).toFixed(1) }}%</span>
+                                            </p>
+                                        </div>
+                                         <!--如何達成目標 --> 
+                                        <div v-if="!results.isGoalAchieved" class="p-4 rounded-lg bg-secondary/20 border border-secondary text-sm">
+                                            <h3 class="font-bold text-lg mb-2"> <i class="mdi mdi-lightbulb-on mr-2 text-2xl"></i> 可達成目標的策略</h3>
+                                            <ul class="text-sm">
+                                                <li class="flex items-center">
+                                                    提升年化報酬率至：<i class="mdi mdi-chevron-double-up ml-2 text-warning text-3xl"></i> <span class="text-lg font-bold text-warning">{{ results.requiredReturn.toFixed(1) }}%</span> 
+                                                </li>
+                                                <li class="flex items-center"> 
+                                                    提高每月投資金額：<i class="mdi mdi-cash-plus mx-2 text-warning text-3xl"></i><span class="text-lg font-bold text-warning">{{ formatCurrency(results.requiredInvestment) }}</span>
+                                                </li>
+                                            </ul>
+                                            <p class="text-xs text-gray-400 mt-3">（以上為模擬參考數值，高報酬通常伴隨高風險，實際結果可能因市場波動有所不同）</p>
+                                        </div> 
+                                        <!--如何達成目標 end -->
                                     </div>
                                     
-                                    <div class="bg-surface rounded-lg px-2 py-6"><div id="customChart" v-html="chartHTML"></div></div>
                                      <!-- 對應的策略卡 -->
                                     <div v-if="results.show" class="v-card p-4 rounded-lg border border-gray-700 bg-surface mb-6">
                                         <div class="flex items-center mb-2">
                                             <i class="mdi mdi-marker-check mr-2 text-white text-2xl"></i>
                                             <h3 class="text-lg font-bold"> 對應的策略: {{ results.strategyName }}</h3> 
                                         </div> 
-                                        <p class="text-gray-400 mb-3">{{ results.strategyReason }}</p>
-                                        <div class="grid grid-cols-3 gap-2 mt-4 text-center text-sm text-gray-400">
-                                            <div class="p-1">
-                                                <div>風險等級</div>
-                                                <div class="font-bold text-2xl mt-1"
-                                                    :class="form.strategyReturn > 0.1 ? 'text-error' : form.strategyReturn > 0.07 ? 'text-warning' : 'text-success'">
-                                                    {{ form.strategyReturn > 0.1 ? '高' : form.strategyReturn > 0.07 ? '中' : '低' }}
-                                                </div>
-                                            </div>
-                                            <div class="p-1 border-x-2 border-gray-700">
-                                                <div>年化波動度</div>
-                                                <div class="font-bold text-2xl text-error mt-1">{{ results.strategyVolatility ? (results.strategyVolatility * 100).toFixed(1) : '0.0' }}%</div>
-                                            </div>
-                                            <div class="p-1">
-                                                <div>年化報酬率</div>
-                                                <div class="font-bold text-2xl text-primary mt-1">{{ (form.strategyReturn * 100).toFixed(1) }}%</div>
-                                            </div>
-                                        </div>
-                                        <div class="mt-4 mb-4">
-                                            
-                                            <!-- Stacked Bar Chart for Selected Strategy -->
-                                            <div class="flex w-full h-8 rounded-md overflow-hidden text-white text-xs items-center">
-                                                <div v-for="(percent, asset) in results.simplifiedAllocation" :key="asset" 
-                                                     :style="{ width: percent + '%', backgroundColor: chartColors[asset] || '#888' }"
-                                                     class="h-full flex items-center justify-center font-semibold"
-                                                     :title="`${asset}: ${percent}%`">
-                                                     <span v-if="percent > 10">{{ asset }} {{ percent }}%</span>
-                                                </div>
-                                            </div>
-                                            <!-- Dynamic Description -->
-                                            <p class="text-sm text-gray-400 leading-relaxed pt-4">{{ results.strategyDescription }}</p>
-                                        </div> 
-                                        
+                                        <strategy-card 
+                                            v-if="results.strategyName" 
+                                            :strategy="{ ...results, expectedReturn: results.strategyReturn, volatility: results.strategyVolatility }" 
+                                            :chart-colors="chartColors" 
+                                            :is-recommendation="false"
+                                            layout="horizontal">
+                                        </strategy-card>
                                     </div>
                                     <!-- 對應的策略卡 end -->
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                                        <div v-if="!results.isGoalAchieved" class="p-4 rounded-lg bg-secondary/20 border border-secondary mt-6 text-sm">
-                                            <h3 class="font-bold text-lg mb-2"> <i class="mdi mdi-lightbulb-on mr-2 text-2xl"></i> 達成目標的可能方式</h3>
-                                            <ul class="text-sm space-y-2">
-                                                <li class="flex items-center">
-                                                    將年化報酬率提高至 <i class="mdi mdi-chevron-double-up mx-2 text-primary text-3xl"></i> <span class="text-2xl text-primary">{{ results.requiredReturn.toFixed(1) }}%</span> 
-                                                </li>
-                                                <li class="flex items-center"> 
-                                                    將每月投資金額提高至 <i class="mdi mdi-cash-plus mx-2 text-primary text-3xl"></i><span class="text-2xl text-primary">{{ formatCurrency(results.requiredInvestment) }}</span>
-                                                </li>
-                                            </ul>
-                                            <p class="text-xs text-gray-400 mt-3">（以上為模擬參考數值，高報酬通常伴隨高風險，實際結果可能因市場波動有所不同）</p>
-                                        </div>
-                                    </div>
+                                     <!-- 模擬圖表 -->
+                                    <div class="bg-surface rounded-lg px-2 py-6 my-3"><div id="customChart" v-html="chartHTML"></div></div>
+                                   
                                     
                                 </div>
                                 <div v-else class="flex flex-col items-center justify-center h-full text-center text-gray-500">
@@ -224,46 +229,18 @@
                     
                     <transition enter-active-class="transition ease-out duration-300" enter-from-class="opacity-0" enter-to-class="opacity-100">
                         <div v-if="results.show" class="mt-8  text-center">
-                            <i class="mdi mdi-finance mr-2 text-6xl"></i>
-                            <h2 class="font-bold mb-4">策略投資組合建議</h2>
-                            <p class="text-center text-xs text-gray-400 mb-6">請依照您的風險承受度選擇合適策略，而非單純追求最高報酬</p>
+                            <h2 class="font-bold my-2 text-xl">策略投資組合建議</h2>
+                            <p class="text-center text-sm text-gray-400 mb-6 pb-2">請依照您的風險承受度選擇合適策略，而非單純追求最高報酬</p>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <div v-for="rec in recommendationResults.filter(r => r.name !== results.strategyName)" :key="rec.name" class="bg-surface rounded-lg p-4 flex flex-col">
-                                    <i class="mdi text-3xl text-primary" :class="rec.icon || 'mdi-chart-line'"></i> 
-                                    <h4 class="font-bold text-lg text-center mb-2">{{ rec.name }}</h4>
-                                    <p class="text-xs text-gray-400 mb-3 text-center">{{ rec.reason }}</p>
-
-                                    <div class="grid grid-cols-3 gap-2 mt-4 text-center text-xs text-gray-400">
-                                        <div class="p-1">
-                                            <div>風險等級</div>
-                                            <div class="font-bold text-xl mt-1" :class="rec.expectedReturn > 0.1 ? 'text-error' : rec.expectedReturn > 0.07 ? 'text-warning' : 'text-success'">
-                                                {{ rec.expectedReturn > 0.1 ? '高' : rec.expectedReturn > 0.07 ? '中' : '低' }}
-                                            </div>
-                                        </div>
-                                        <div class="p-1 border-x border-gray-700">
-                                            <div>年化波動度</div>
-                                            <div class="font-bold text-xl text-error mt-1">{{ (rec.volatility * 100).toFixed(1) }}%</div>
-                                        </div>
-                                        <div class="p-1">
-                                            <div>年化報酬率</div>
-                                            <div class="font-bold text-xl text-primary mt-1">{{ (rec.expectedReturn * 100).toFixed(1) }}%</div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-4 mb-4">
-                                        <div class="flex w-full h-6 rounded-md overflow-hidden text-xs items-center">
-                                            <div v-for="(percent, asset) in rec.simplifiedAllocation" :key="asset" :style="{ width: percent + '%', backgroundColor: chartColors[asset] || '#888' }" class="h-full flex items-center justify-center font-semibold" :title="`${asset}: ${percent}%`">
-                                                <span v-if="percent > 15">{{ asset }} {{ percent }}%</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="mt-auto pt-4">
-                                        <div v-if="rec.isMetByInitial" class="text-center font-bold text-success text-sm p-2 rounded-md bg-success/10 mb-2">✔️ 現有月投金額足以達成目標</div>
+                                <div v-for="(rec, index) in recommendationResults.filter(r => r.name !== results.strategyName)" :key="rec.name" class="flex flex-col bg-surface rounded-lg">
+                                    
+                                    <strategy-card :strategy="rec" :chart-colors="chartColors" :is-recommendation="false" :card-number="index + 1" class="flex-grow"></strategy-card>
+                                    <div class="px-4 pb-1">
+                                        <div v-if="rec.isMetByInitial" class="text-center font-bold text-white text-sm p-2 rounded-md bg-primary-gradient/10 mb-2">✔️ 現有月投金額足以達成目標</div>
                                         <div v-else class="text-center font-bold text-sm bg-primary-gradient text-white-hover p-2 rounded-md mb-2">建議月投：{{ formatCurrency(rec.requiredMonthly) }}</div>
-                                        <a :href="rec.url" target="_blank" class="block w-full text-center bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md transition-colors">
-                                            查看詳情
-                                        </a>
+                                    </div>
+                                    <div class="p-4 pt-0">
+                                          <a :href="rec.url" target="_blank" class="block w-full text-center bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md transition-colors">查看詳情</a>
                                     </div>
                                 </div>
                             </div>
