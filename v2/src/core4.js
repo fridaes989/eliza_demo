@@ -5,13 +5,13 @@ const portfolioConfig = {
     // Section 1: Google Sheet URL for THIS portfolio
     googleSheet: {
         // 這是所有投資組合共用的 Google Sheet 檔案 ID
-        sheetId: '2PACX-1vTJOnAP0pKYY9aSGqhB3dbKAtzM32FSPHH4J8VKtdM3rBvm97qG2zPMgPfhLAgMzfTkW571ODjEmvVd',
+        sheetId: '2PACX-1vSHW-797FZrmMwApsIYm8hkv_ehu6ws3OhAuAY8I5azo45Lf8-JFwzgRheZr4JJKMzOEtYqBUVUOPVp',
         
         // 這是「投資組合」 (e.g., 全天候策略) 對應的工作表 ID
-        gid: '261742724',
+        gid: '798485178',
 
         // 這是 S&P 500 指數專用的工作表 ID
-        sp500Gid: '283425635',
+        sp500Gid: '218723572',
 
         // 根據 gid 產生對應的資料 URL
         get dataUrl() { return `https://docs.google.com/spreadsheets/d/e/${this.sheetId}/pub?gid=${this.gid}&single=true&output=csv`; },
@@ -33,8 +33,9 @@ const portfolioConfig = {
             maxDrawdown: 0
         },
         description: `
-        <p class="pb-4">此為增長型資產配置策略，在經典三基金組合基礎上，額外納入不動產基金（REITs），以增強抗通膨能力。</p>
-        <p class="pb-4">該組合由50%美國股票、20%國際股票、10%不動產及20%美國債券組成，旨在透過更多元化的資產類別，在追求長期增長的同時，提供比傳統組合更佳的通膨保護，尤其適合希望在面對未來高通膨環境時增加防禦力的投資者。</p> `,
+        <p class="pb-4">此為增長型資產配置策略，在經典三基金組合基礎上，額外納入<span class="text-primary">不動產基金（REITs）</span>，以增強抗通膨能力。</p>
+        <p class="pb-4">該組合由50%美國股票、20%國際股票、10%不動產及20%美國債券組成，旨在透過更多元化的資產類別。</p>
+        <p class="pb-4">在在追求長期增長的同時，提供比傳統組合更佳的通膨保護，尤其適合希望在面對未來高通膨環境時增加防禦力的投資者。</p>`,
         
         // 改為數組格式
         pros: [

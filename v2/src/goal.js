@@ -14,18 +14,19 @@ const { createApp, ref, computed, watch, nextTick, onMounted } = Vue;
 const app = createApp({
     components: { 'strategy-card': StrategyCard, 'results-summary': ResultsSummary },
     setup() {
+        const isFormCollapsed = ref(false);
         const isMenuOpen = ref(false);
         const toggleMenu = () => { isMenuOpen.value = !isMenuOpen.value; };
 
-        const API_BASE_URL = 'https://49d22ce3-d235-4200-af2b-da55a826dee9.mock.pstmn.io/forms';
-        const AUTH_TOKEN = 'Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IldBRktTTVptVmN6YzVGckdqTlBOT090emZudmE5RDNvIiwidHlwIjoiSldUIn0.eyJzdWIiOiI0NzExMjIyIiwidXNlcl9ndWlkIjoiMDg4ZmIwOWMtNWE1Yy00MTQ6LWI2NjctODFlNmVmZjJhMzU5IiwidG9rZW5faWQiOiIxMSIsImFwcF9pZCI6IjIxIiwiaXNfZ3Vlc3QiOmZhbHNlLCJuYmYiOjE3NTc1NjgxODgsImV4cCI6MTc1NzY1ODE4OCwiaWF0IjoxNzU3NTcxNzg4LCJpc3MiOiJodHRwczovL3d3dy5jbW9uZXkudHciLCJhdWQiOiJjbW9uZXlhcGkifQ.mKdSX-Cff2itAIdK66eL4Tj5XVxNS66frMAjzVBFrjGJuI_ZHX6dg77kkX07PTjPBZ02FsBUbJanH0WjXN18KAI4VBV0BvV71GgQ4NSeNSG9gO6N7DxTifAxfrZ94xhjZuixs-x2xOl0kCoWHA3AODvA5D2uCyBPD599C9oHlYKSoqC9fW6-wHmN3oJOe6tXnNYDNYLSC6IbKPXppX2Jp2zQqjWsVdTRYh-JQcGoERBiX6ctyn7pK4ExXh8kBP3BuST2eEZEiTU70ED7AFa_FpOoDHoPfaCa0iSIEPVyX6riSezHqA_4yKaUu1ceb3fAX-lvnFeoD2L4MA2eWODHAw';
+        const API_BASE_URL = 'https://development-executeapi.cmoney.tw/MemberSurvey/forms';
+        const AUTH_TOKEN = 'Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IldBRktTTVptVmN6YzVGckdqTlBOT090emZudmE5RDNvIiwidHlwIjoiSldUIn0.eyJzdWIiOiI0NzExMjIyIiwidXNlcl9ndWlkIjoiMDg4ZmIwOWMtNWE1Yy00MTQ2LWI2NjctODFlNmVmZjJhMzU5IiwidG9rZW5faWQiOiIyMCIsImFwcF9pZCI6IjIxIiwiaXNfZ3Vlc3QiOmZhbHNlLCJuYmYiOjE3NTgyNjU1NjMsImV4cCI6MTc1ODM1NTU2MywiaWF0IjoxNzU4MjY5MTYzLCJpc3MiOiJodHRwczovL3d3dy5jbW9uZXkudHciLCJhdWQiOiJjbW9uZXlhcGkifQ.drOu61zkCjdsIQ7KK__B5RYtzTb69EcPqb7Wy-6o86awnkpAW-pCYRO368hFPmIP54tEKBzAu1DrerwlBeIWMN5uyEcODbwjo_qt-KsUOSWDcU0CDgbtMpqD3SWIrBKpGGuIC0-UxsoWi64igwwTGJyiRHFBa5kwu5lExBWeLji6os4sHG1x-u21f7TuCcUyDHGKg8Mfx9Bbv5-j37CkjeOiSfR9bTz2ulQHqqXrPWVCvQIgo6mSQbCNzlJ5uWNlL9LWzqxcLAqxgO5fnQop3QyE4e6mFRIe0UiDsy5bFByo4mypKQu_GFTulQx3vhS0pasAayH-b2oKSNZJx6Hljg';
 
         const defaultGoalTypes = { 
-            retirement: { key: 'retirement', title: "退休規劃", CurrentAge:"目前年齡", ageLabel: "預計退休年齡", amountLabel: "每月期望退休被動收入(美元)", withdrawRate: 0.04, formId: 3 }, 
-            house: { key: 'house', title: "購屋計畫", CurrentAge:"目前年齡", ageLabel: "預計購屋年齡", amountLabel: "目標房屋總價(萬美元)", withdrawRate: 1.0,formId: 4 }, 
-            education: { key: 'education', title: "教育基金", CurrentAge:"孩子目前年齡", ageLabel: "孩子預計入學年齡", amountLabel: "預估教育總費用(萬美元)", withdrawRate: 1.0, formId: 5 }, 
-            emergency: { key: 'emergency', title: "緊急預備金", CurrentAge:"目前年齡", ageLabel: "預計完成年齡", amountLabel: "緊急預備金目標(萬美元)", withdrawRate: 1.0, formId: 6 }, 
-            custom: { key: 'custom', title: "自定義目標", CurrentAge:"目前年齡", ageLabel: "預計達成年齡", amountLabel: "目標金額(萬美元)", withdrawRate: 1.0, formId: 7 } 
+            retirement: { key: 'retirement', title: "退休規劃", icon: "mdi-beach", CurrentAge:"目前年齡", ageLabel: "預計退休年齡", amountLabel: "每月期望退休被動收入(美元)", withdrawRate: 0.04, formId: 3 }, 
+            house: { key: 'house', title: "購屋計畫", icon: "mdi-home-plus", CurrentAge:"目前年齡", ageLabel: "預計購屋年齡", amountLabel: "目標房屋頭期款(萬美元)", withdrawRate: 1.0,formId: 4 }, 
+            education: { key: 'education', title: "教育基金", icon: "mdi-school", CurrentAge:"孩子目前年齡", ageLabel: "孩子預計入學年齡", amountLabel: "預估教育總費用(萬美元)", withdrawRate: 1.0, formId: 5 }, 
+            emergency: { key: 'emergency', title: "緊急預備金", icon: "mdi-lifebuoy", CurrentAge:"目前年齡", ageLabel: "預計完成年齡", amountLabel: "緊急預備金目標(萬美元)", withdrawRate: 1.0, formId: 6 }, 
+            custom: { key: 'custom', title: "自定義目標", icon: "mdi-bullseye-arrow", CurrentAge:"目前年齡", ageLabel: "預計達成年齡", amountLabel: "目標金額(萬美元)", withdrawRate: 1.0, formId: 7 } 
         };
         const goalTypes = ref({});
 
@@ -40,11 +41,11 @@ const app = createApp({
         };
         
         const strategies = { 
-            '全天候策略': { expectedReturn: 0.037, volatility: 0.09, url: 'all_weather.html', allocation: { 'VTI': 30, 'TLT': 40, 'IEF': 15, 'GLD': 7.5, 'DBC': 7.5 }, simplifiedAllocation: { '股票': 30, '債券': 55, '其他': 15 }, description: '股債比為 30/55，另有 15% 為非股非債資產。' }, 
-            '三基金組合': { expectedReturn: 0.068, volatility: 0.1256, url: 'classic3.html', allocation: { 'VTI (美國股市)': 60, 'VTIAX (國際股市)': 20, 'BND (債券)': 20 }, simplifiedAllocation: { '股票': 80, '債券': 20 }, description: '股債比為 80/20。' }, 
-            '積極型股債組合': { expectedReturn: 0.075, volatility: 0.1263, url: 'aggressive.html', allocation: { 'VTI (美國股市)': 70, 'VTIAX (國際股市)': 10, 'BND (債券)': 20 }, simplifiedAllocation: { '股票': 80, '債券': 20 }, description: '股債比為 80/20。' },
-            '核心四基金': { expectedReturn: 0.069, volatility: 0.125, url: 'core4.html', allocation: { 'VTI (美國股市)': 50, 'VXUS': 20, 'VNQ':10,'BND (債券)': 20 }, simplifiedAllocation: { '股票': 70, '債券': 20, '其他': 10 }, description: '股債比為 70/20，另有 10% 為不動產資產。' },
-            '巴菲特推薦': { expectedReturn: 0.123, volatility: 0.152, url: 'voo.html', allocation: { 'VOO': 100}, simplifiedAllocation: { '股票': 100 }, description: '全壓股票，股債比為 100/0。' } 
+            '全天候策略': { icon: 'mdi-weather-pouring', expectedReturn: 0.037, volatility: 0.09, url: 'all_weather.html', allocation: { 'VTI': 30, 'TLT': 40, 'IEF': 15, 'GLD': 7.5, 'DBC': 7.5 }, simplifiedAllocation: { '股票': 30, '債券': 55, '其他': 15 }, description: '股債比為 30/55，另有 15% 為非股非債資產。' }, 
+            '三基金組合': { icon: 'mdi-vector-triangle', expectedReturn: 0.068, volatility: 0.1256, url: 'classic3.html', allocation: { 'VTI (美國股市)': 60, 'VTIAX (國際股市)': 20, 'BND (債券)': 20 }, simplifiedAllocation: { '股票': 80, '債券': 20 }, description: '股債比為 80/20。' }, 
+            '核心四基金': { icon: 'mdi-sitemap', expectedReturn: 0.069, volatility: 0.125, url: 'core4.html', allocation: { 'VTI (美國股市)': 50, 'VXUS': 20, 'VNQ':10,'BND (債券)': 20 }, simplifiedAllocation: { '股票': 70, '債券': 20, '其他': 10 }, description: '股債比為 70/20，另有 10% 為不動產資產。' },
+            '積極型股債組合': { icon: 'mdi-rocket-launch', expectedReturn: 0.075, volatility: 0.1263, url: 'aggressive.html', allocation: { 'VTI (美國股市)': 70, 'VTIAX (國際股市)': 10, 'BND (債券)': 20 }, simplifiedAllocation: { '股票': 80, '債券': 20 }, description: '股債比為 80/20。' },
+            '巴菲特推薦': { icon: 'mdi-face-man-shimmer', expectedReturn: 0.123, volatility: 0.152, url: 'voo.html', allocation: { 'VOO': 100}, simplifiedAllocation: { '股票': 100 }, description: '全壓股票，股債比為 100/0。' } 
         };
 
         // 新增工具函式：由報酬率取得波動度
@@ -56,8 +57,8 @@ const app = createApp({
         const strategyReasons = { 
             '全天候策略': '此策略提供良好的風險分散，適合追求穩定報酬的投資者', 
             '三基金組合': '簡單而有效的配置，適合長期投資且希望降低管理複雜度的投資者', 
-            '積極型股債組合': '較高的股票配置能帶來更好的長期報酬，適合年輕且風險承受度高的投資者',
             '核心四基金': '「三基金組合」的進階選項，增加房地產以對抗通膨。', 
+            '積極型股債組合': '較高的股票配置能帶來更好的長期報酬，適合年輕且風險承受度高的投資者',
             '巴菲特推薦': '完全相信並押注於美國最具代表性的 500 家頂級企業的長期增長。'  
         };
 
@@ -69,7 +70,12 @@ const app = createApp({
         });
         const chartHTML = ref('');
         const recommendationResults = ref([]);
-        const savedGoals = ref([]);
+        // --- 開發用模擬資料：方便調整「已存目標」樣式 ---
+        // 當您完成樣式開發後，可以將此處的陣列改回空的 []
+        const savedGoals = ref([
+            { goalType: 'retirement', currentAge: 30, targetAge: 65, targetValue: 5000, currentAssets: 150, monthlyInvestment: 1200, strategyReturn: 0.068 },
+            { goalType: 'house', currentAge: 28, targetAge: 35, targetValue: 300, currentAssets: 80, monthlyInvestment: 2, strategyReturn: 0.075 }
+        ]);
         const charts = {}; // To manage chart instances
         const snackbar = ref({ show: false, message: '', color: 'success' });
 
@@ -81,15 +87,71 @@ const app = createApp({
 
         const loadFormDefinitions = async () => {
             try {
-                const response = await fetch(API_BASE_URL, {
-                    method: 'GET',
-                    headers: { 'Authorization': AUTH_TOKEN, 'accept': 'application/json' }
-                });
-                if (!response.ok) throw new Error(`API 回應不正確: ${response.statusText}`);
-                const formsArray = await response.json();
-                if (!Array.isArray(formsArray) || formsArray.length === 0) throw new Error("API 回傳的資料格式不符或為空");
+                const questionTitleToFieldMap = {
+                    '目前年齡': 'currentAge',
+                    '預計退休年齡': 'targetAge',
+                    '每月期望退休被動收入': 'targetValue',
+                    '當前總資產': 'currentAssets',
+                    '每月投資金額': 'monthlyInvestment',
+                    '選擇投資策略': 'strategyReturn',
+                    // 為其他目標類型也加入對應
+                    '預計購屋年齡': 'targetAge',
+                    '目標房屋頭期款(萬美元)': 'targetValue',
+                    '孩子目前年齡': 'currentAge',
+                    '孩子預計入學年齡': 'targetAge',
+                    '預估教育總費用(萬美元)': 'targetValue',
+                    '預計完成年齡': 'targetAge',
+                    '緊急預備金目標(萬美元)': 'targetValue',
+                    '預計達成年齡': 'targetAge',
+                    '目標金額(萬美元)': 'targetValue'
+                };
+
                 const newGoalTypes = {};
-                for (const formDef of formsArray) { newGoalTypes[formDef.key] = formDef; }
+                const detailFetchPromises = Object.entries(defaultGoalTypes).map(async ([key, defaultGoal]) => {
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/${defaultGoal.formId}`, { headers: { 'Authorization': AUTH_TOKEN, 'accept': 'application/json' } });
+                        if (!response.ok) throw new Error(`Failed to fetch formId ${defaultGoal.formId}`);
+                        const formDef = await response.json();
+    
+                        const goalData = { ...defaultGoal, ...formDef.info, isResponded: formDef.isResponded, questionIdMap: {}, questionFormats: {} };
+    
+                        // 從 questions 動態更新標籤並建立 questionId 對應
+                        if (formDef.questions && Array.isArray(formDef.questions)) {
+                            formDef.questions.forEach(q => {
+                                const internalFieldName = questionTitleToFieldMap[q.title];
+                                if (internalFieldName) {
+                                    goalData.questionIdMap[internalFieldName] = q.questionId;
+                                    if (q.textQuestion && q.textQuestion.textFormat) {
+                                        goalData.questionFormats[q.questionId] = q.textQuestion.textFormat;
+                                    }
+                                    // 處理選擇題
+                                    if (q.choiceQuestion && q.choiceQuestion.options) {
+                                        // 當 API 載入策略選項時，我們需要將其與我們內部定義的策略數值進行匹配
+                                        // 而不是直接覆蓋 value 屬性
+                                        const apiOptions = q.choiceQuestion.options.map(apiOpt => {
+                                            // 從我們預設的 strategyOptions 中找到匹配的選項
+                                            const matchingDefaultOption = strategyOptions.find(defaultOpt => defaultOpt.text === apiOpt.value);
+                                            return {
+                                                text: apiOpt.value,
+                                                // 如果找到匹配項，使用其數值 value，否則保持原樣（作為備用）
+                                                value: matchingDefaultOption ? matchingDefaultOption.value : apiOpt.value
+                                            };
+                                        });
+                                        // 更新 strategyOptionsRef 以驅動 UI
+                                        strategyOptionsRef.value = apiOptions;
+                                    }
+                                }
+                            });
+                        }
+                        newGoalTypes[key] = goalData;
+                    } catch (e) {
+                        console.error(`獲取 formId ${defaultGoal.formId} 的詳細資料失敗，將使用預設值:`, e);
+                        newGoalTypes[key] = defaultGoal; // 如果 API 失敗，則退回使用預設值
+                    }
+                });
+    
+                await Promise.all(detailFetchPromises);
+    
                 goalTypes.value = newGoalTypes;
             } catch (error) {
                 console.error('從 API 獲取表單定義失敗:', error);
@@ -99,27 +161,62 @@ const app = createApp({
 
         const loadGoalsFromAPI = async () => {
             if (Object.keys(goalTypes.value).length === 0) return;
-            const formIds = Object.values(goalTypes.value).map(g => g.formId);
-            const fetchPromises = formIds.map(async (formId) => {
-                try {
-                    const response = await fetch(`${API_BASE_URL}/${formId}`, {
-                        headers: { 'Authorization': AUTH_TOKEN, 'accept': 'application/json' }
-                    });
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data && data.goalType) return data;
-                    } else if (response.status !== 404) {
-                        console.error(`Error fetching goal for formId ${formId}:`, response.statusText);
+        
+            const fetchPromises = Object.entries(goalTypes.value).map(async ([goalKey, goalConfig]) => {
+                if (goalConfig.isResponded) {
+                    try {
+                        const responseUrl = `${API_BASE_URL}/${goalConfig.formId}/responses`;
+                        const response = await fetch(responseUrl, {
+                            headers: { 'Authorization': AUTH_TOKEN, 'accept': 'application/json' }
+                        });
+        
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch response for formId ${goalConfig.formId}, status: ${response.status}`);
+                        }
+        
+                        const responseData = await response.json();
+                        if (responseData && responseData.answers) {
+                            // Transform API response back into a goal object
+                            const savedGoal = { goalType: goalKey };
+                            const { questionIdMap } = goalConfig;
+                            const questionIdToFieldMap = Object.entries(questionIdMap).reduce((acc, [field, qId]) => {
+                                acc[qId] = field;
+                                return acc;
+                            }, {});
+        
+                            responseData.answers.forEach(answer => {
+                                const fieldName = questionIdToFieldMap[answer.questionId];
+                                if (fieldName && answer.answers && answer.answers.length > 0) {
+                                    // Convert back to number if it's a numeric field
+                                    const value = answer.answers[0].value;
+                                    if (fieldName === 'strategyReturn') {
+                                        // For strategy, find the numeric value from the text
+                                        const option = strategyOptions.value.find(opt => opt.text === value);
+                                        savedGoal[fieldName] = option ? option.value : value;
+                                    } else if (fieldName === 'goalType') { // This field is not from API, but good practice
+                                        savedGoal[fieldName] = value;
+                                    } else {
+                                        savedGoal[fieldName] = isNaN(Number(value)) ? value : Number(value);
+                                    }
+                                }
+                            });
+                            return savedGoal;
+                        }
+                    } catch (error) {
+                        console.error(`Error fetching saved goal for formId ${goalConfig.formId}:`, error);
+                        return null;
                     }
-                    return null;
-                } catch (error) {
-                    console.error(`Network error fetching goal for formId ${formId}:`, error);
-                    return null;
                 }
+                return null;
             });
+        
             try {
                 const results = await Promise.all(fetchPromises);
-                savedGoals.value = results.filter(goal => goal !== null);
+                const loadedGoals = results.filter(goal => goal !== null);
+                if (loadedGoals.length > 0) {
+                    savedGoals.value = loadedGoals;
+                    showSnackbar(`成功載入 ${loadedGoals.length} 個已存目標`, 'info');
+                }
             } catch (error) {
                 showSnackbar('讀取已存目標失敗', 'error');
                 console.error('Error loading all goals:', error);
@@ -141,22 +238,35 @@ const app = createApp({
         const goalOptions = computed(() => {
             return Object.keys(goalTypes.value).map(key => ({ 
                 text: goalTypes.value[key].title, 
-                value: key 
+                value: key // The value should still be the internal key like 'retirement'
             }));
         });
         
+        const allGoalSlots = computed(() => {
+            if (Object.keys(goalTypes.value).length === 0) return [];
+            const savedGoalsMap = new Map(savedGoals.value.map(g => [g.goalType, g]));
+            
+            return Object.keys(goalTypes.value).map(key => {
+                const savedData = savedGoalsMap.get(key);
+                return {
+                    ...goalTypes.value[key], // Includes title, formId, etc.
+                    savedData: savedData || null
+                };
+            });
+        });
         const monthlyInvestmentLabel = computed(() => {
             const unit = form.value.goalType === 'retirement' ? '美元' : '萬美元';
             return `每月投資金額 (${unit})`;
         });
 
-        const strategyOptions = [ 
-            { text: '極保守型｜低風險｜年化報酬 <5%', value: 0.037, key: '全天候策略' }, 
-            { text: '穩健型｜中低風險｜年化報酬 6~8%', value: 0.068, key: '三基金組合' }, 
-            { text: '積極型｜中高風險｜年化報酬 8~10%', value: 0.075, key: '積極型股債組合' }, 
-            { text: '增長型｜中高風險｜年化報酬 6~8%', value: 0.069, key: '核心四基金' }, 
-            { text: '高風險型｜波動大｜年化報酬 12.3%', value: 0.123, key: '巴菲特推薦' } 
+        const strategyOptions = [
+            { text: '極保守型｜低風險｜年化報酬 <5%', value: 0.037, key: '全天候策略' },
+            { text: '穩健型｜中低風險｜年化報酬 6~8%', value: 0.068, key: '三基金組合' },
+            { text: '增長型｜中高風險｜年化報酬 6~8%', value: 0.069, key: '核心四基金' },
+            { text: '積極型｜中高風險｜年化報酬 8~10%', value: 0.075, key: '積極型股債組合' },
+            { text: '高風險型｜波動大｜年化報酬 12.3%', value: 0.123, key: '巴菲特推薦' }
         ];
+        const strategyOptionsRef = ref([...strategyOptions]);
         
         watch(() => form.value.goalType, (newType) => { 
             results.value.show = false; 
@@ -201,16 +311,38 @@ const app = createApp({
         };
         
         const saveGoal = async () => {
-            if (!isLoggedIn.value) { showSnackbar('請先登入才能儲存目標', 'warning'); return; }
-            const formId = goalTypes.value[form.value.goalType]?.formId;
+            // todo: 檢查是否登入
+            // if (!isLoggedIn.value) { showSnackbar('請先登入才能儲存目標', 'warning'); return; }
+            const formId = goalTypes.value[form.value.goalType].formId;
             if (!formId) { showSnackbar('無效的目標類型', 'error'); return; }
-            const answersArray = Object.entries(form.value).map(([key, value]) => ({ questionId: key, answers: [{ value: String(value) }] }));
-            const requestBody = { answers: answersArray };
+
+            const currentGoalType = goalTypes.value[form.value.goalType];
+            if (!currentGoalType || !currentGoalType.questionIdMap) {
+                showSnackbar('找不到問題對應表，無法儲存', 'error');
+                return;
+            }
+            const { questionIdMap, questionFormats } = currentGoalType;
+
+            const answersArray = Object.entries(form.value)
+                .map(([key, value]) => {
+                    if (key === 'goalType') return null; // 移除 "選擇財務目標" 欄位
+                    const questionId = questionIdMap[key];
+                    if (!questionId) return null;
+                    const format = questionFormats[questionId];
+                    // 統一將所有答案值轉換為字串格式
+                    const answerValue = String(value);
+                    return { questionId, answers: [{ value: answerValue }] };
+                })
+
+            const requestBody = { answers: answersArray.filter(Boolean) }; // 過濾掉 null 值
             const apiUrl = `${API_BASE_URL}/${formId}/responses`;
             try {
                 const response = await fetch(apiUrl, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': AUTH_TOKEN 
+                    },
                     body: JSON.stringify(requestBody),
                 });
                 if (!response.ok) { throw new Error(`API 請求失敗: ${response.statusText}`); }
@@ -220,16 +352,36 @@ const app = createApp({
                 else { savedGoals.value.push(goalData); }
                 showSnackbar('目標已儲存！', 'success');
             } catch (error) {
-                console.error('儲存目標失敗:', error);
+                console.error('儲存目標失敗:', error.message);
                 showSnackbar('儲存目標失敗，請稍後再試', 'error');
             }
         };
 
         const loadSavedGoal = (goal) => {
-            form.value = { ...goal }; // Directly update the form
+            // Create a mutable copy to avoid changing the original saved goal object
+            const goalToLoad = { ...goal };
+
+            // If strategyReturn is a string, convert it to its numeric value for the form
+            if (typeof goalToLoad.strategyReturn === 'string') {
+                const strategyOption = strategyOptions.find(opt => opt.text === goalToLoad.strategyReturn);
+                if (strategyOption) goalToLoad.strategyReturn = strategyOption.value;
+            }
+            results.value.show = false; // Force reactivity by hiding results before recalculating
+            form.value = goalToLoad;
             calculate();
+            isFormCollapsed.value = true; // Collapse the form to show results immediately
             currentStep.value = 2; // Go to results page
             showSnackbar('已載入目標並重新計算', 'info');
+        };
+
+        const selectUnsavedGoal = (goalType) => {
+            form.value.goalType = goalType; // Set the goal type in the form
+            isFormCollapsed.value = false; // Ensure the form is expanded
+            results.value.show = false; // Hide any previous results
+            // Scroll to the form section smoothly
+            nextTick(() => {
+                document.getElementById('goal-form-section').scrollIntoView({ behavior: 'smooth' });
+            });
         };
 
         const deleteSavedGoal = async (index) => {
@@ -266,13 +418,13 @@ const app = createApp({
             const config = goalTypes.value[goal.goalType];
             if (!config) return 0;
             const years = goal.targetAge - goal.currentAge; 
-            if (years <= 0) return goal.goalType === 'retirement' ? goal.targetValue : goal.targetValue * 10000; 
             const targetValueUSD = goal.goalType === 'retirement' ? goal.targetValue : goal.targetValue * 10000; 
+            if (years <= 0) return targetValueUSD;
             if (config.withdrawRate === 0.04) { 
                 let base = (targetValueUSD * 12 / config.withdrawRate); 
                 return Math.round(base * Math.pow(1 + inflationRate, years)); 
             } 
-            return targetValueUSD; 
+            return targetValueUSD;
         };
 
         const calculateGoalProgress = (goal) => { 
@@ -308,9 +460,12 @@ const app = createApp({
             if (Object.keys(formErrors.value).length > 0) { showSnackbar('請修正表單中的錯誤', 'error'); return; } 
             if (form.value.targetAge <= form.value.currentAge) { showSnackbar('目標年齡必須大於目前年齡', 'error'); return; } 
             
+            isFormCollapsed.value = false; // Ensure form is expanded when calculating
             const years = form.value.targetAge - form.value.currentAge; 
-            const goalAmount = getCalculatedTargetAmount(form.value); 
-            const monthlyInvestUSD = form.value.goalType === 'retirement' ? form.value.monthlyInvestment : form.value.monthlyInvestment * 10000; 
+            const goalAmount = getCalculatedTargetAmount(form.value);
+            // 統一將輸入值轉換為美元進行計算
+            // 退休規劃的 monthlyInvestment 單位是美元，其他是萬美元
+            const monthlyInvestUSD = form.value.goalType === 'retirement' ? form.value.monthlyInvestment : form.value.monthlyInvestment * 10000;
             const currentAssetsUSD = form.value.currentAssets * 10000; 
             
             const assetsProjection = projectAssets(years, form.value.strategyReturn, monthlyInvestUSD, currentAssetsUSD); 
@@ -343,12 +498,15 @@ const app = createApp({
                 strategyReason: selectedOption ? strategyReasons[selectedOption.key] : null,
                 simplifiedAllocation: chosenStrategy ? chosenStrategy.simplifiedAllocation : {},
                 strategyDescription: chosenStrategy ? chosenStrategy.description : '',
-                currentAssets: currentAssetsUSD, // Add current assets to results
+                currentAssets: currentAssetsUSD,
             };
             
             if (!results.value.isGoalAchieved) { 
                 results.value.requiredReturn = calcRequiredReturn(goalAmount, years, monthlyInvestUSD, currentAssetsUSD); 
-                results.value.requiredInvestment = calcRequiredInvestment(goalAmount, years, form.value.strategyReturn, currentAssetsUSD); 
+                let requiredInvestmentUSD = calcRequiredInvestment(goalAmount, years, form.value.strategyReturn, currentAssetsUSD);
+                // 根據目標類型，將計算出的美元金額轉回對應的顯示單位（退休：美元，其他：萬美元）
+                results.value.requiredInvestment = form.value.goalType === 'retirement' ? requiredInvestmentUSD : requiredInvestmentUSD / 10000;
+
             } 
             updateStrategyRecommendations(goalAmount, years, currentAssetsUSD); 
             renderCustomChart(assetsProjection, investmentProjection, goalAmount, years); 
@@ -384,20 +542,21 @@ const app = createApp({
         const calculateRequiredMonthlyInvestmentForStrategy = (targetAmount, years, annualReturn, startAssetsUSD) => { 
             const fvCurrent = startAssetsUSD * Math.pow(1 + annualReturn, years); 
             const remainingNeeded = targetAmount - fvCurrent; 
-            if (remainingNeeded <= 0) return { amount: 0, isMetByInitial: true }; 
+            if (remainingNeeded <= 0) return { amountUSD: 0, isMetByInitial: true }; 
             let requiredMonthlyUSD = 0; 
             if (annualReturn > 0) {
                 requiredMonthlyUSD = remainingNeeded / (((Math.pow(1 + annualReturn, years) - 1) / annualReturn) * 12);
             } else {
                 requiredMonthlyUSD = remainingNeeded / (years * 12);
             }
-            return { amount: requiredMonthlyUSD, isMetByInitial: false }; 
+            return { amountUSD: requiredMonthlyUSD, isMetByInitial: false }; 
         };
         
         const updateStrategyRecommendations = (goalAmount, years, currentAssetsUSD) => { 
             const recommendations = Object.entries(strategies).map(([name, strategy]) => { 
                 const calcResult = calculateRequiredMonthlyInvestmentForStrategy(goalAmount, years, strategy.expectedReturn, currentAssetsUSD); 
-                return { name, strategy, requiredMonthly: calcResult.amount, isMetByInitial: calcResult.isMetByInitial }; 
+                const requiredMonthlyDisplay = form.value.goalType === 'retirement' ? calcResult.amountUSD : calcResult.amountUSD / 10000;
+                return { name, strategy, requiredMonthly: requiredMonthlyDisplay, isMetByInitial: calcResult.isMetByInitial }; 
             }); 
             recommendationResults.value = recommendations.map(rec => ({ 
                 name: rec.name, 
@@ -405,8 +564,9 @@ const app = createApp({
                 requiredMonthly: rec.requiredMonthly, 
                 reason: strategyReasons[rec.name], isMetByInitial: rec.isMetByInitial,
                 url: rec.strategy.url,
-                simplifiedAllocation: rec.strategy.simplifiedAllocation,
-                volatility: rec.strategy.volatility
+                simplifiedAllocation: rec.strategy.simplifiedAllocation, // This was already here, which is great!
+                volatility: rec.strategy.volatility,
+                icon: rec.strategy.icon
             }));
         };
         
@@ -483,10 +643,10 @@ const app = createApp({
         // === MODIFICATION END ===
 
         return { 
-            isMenuOpen, toggleMenu,
+            isMenuOpen, toggleMenu, isFormCollapsed,
             form, formErrors, results, chartHTML, recommendationResults, savedGoals, snackbar, currentStep,
-            goalTypes, pageTitle, targetCurrentAge, targetAgeLabel, targetAmountLabel, monthlyInvestmentLabel, resultsTitle, 
-            calculateButtonText, goalOptions, strategyOptions, calculate,
+            goalTypes, pageTitle, targetCurrentAge, targetAgeLabel, targetAmountLabel, monthlyInvestmentLabel, resultsTitle,
+            calculateButtonText, goalOptions, allGoalSlots, strategyOptions: strategyOptionsRef, calculate, selectUnsavedGoal,
             saveGoal, loadSavedGoal, deleteSavedGoal, showTooltip, moveTooltip, hideTooltip,
             getCalculatedTargetAmount, calculateGoalProgress, formatCurrency, chartColors,
         };

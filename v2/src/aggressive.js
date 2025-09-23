@@ -5,13 +5,13 @@ const portfolioConfig = {
     // Section 1: Google Sheet URL for THIS portfolio
     googleSheet: {
         // 這是所有投資組合共用的 Google Sheet 檔案 ID
-        sheetId: '2PACX-1vTJOnAP0pKYY9aSGqhB3dbKAtzM32FSPHH4J8VKtdM3rBvm97qG2zPMgPfhLAgMzfTkW571ODjEmvVd',
+        sheetId: '2PACX-1vSHW-797FZrmMwApsIYm8hkv_ehu6ws3OhAuAY8I5azo45Lf8-JFwzgRheZr4JJKMzOEtYqBUVUOPVp',
         
         // 這是「投資組合」 (e.g., 全天候策略) 對應的工作表 ID
-        gid: '1065112708',
+        gid: '1870147465',
 
         // 這是 S&P 500 指數專用的工作表 ID
-        sp500Gid: '283425635',
+        sp500Gid: '218723572',
 
         // 根據 gid 產生對應的資料 URL
         get dataUrl() { return `https://docs.google.com/spreadsheets/d/e/${this.sheetId}/pub?gid=${this.gid}&single=true&output=csv`; },
@@ -29,8 +29,8 @@ const portfolioConfig = {
             
         },
         description: `
-        <p>此配置為「80/20」高增長策略，旨在透過高比例股票追求長期回報最大化。</p>
-        <p>組合由80%「全球股票市場基金(VT)」和20%「全球債券市場基金(BNDW)」組成。VT單一基金便涵蓋全球逾九千家公司股票，實現一檔基金投遍世界的目標，適合投資年限長、風險承受度高的投資人。</p>`,
+        <p>此配置為「80/20」高增長策略，旨在透過高比例股票追求長期回報最大化。組合由80%「全球股票市場基金(VT)」和20%「全球債券市場基金(BNDW)」組成。</p>
+        <p>VT單一基金便涵蓋全球逾九千家公司股票，實現一檔基金投遍世界的目標，適合投資年限長、風險承受度高的投資人。</p>`,
         
         // 改為數組格式
         pros: [

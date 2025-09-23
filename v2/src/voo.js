@@ -5,13 +5,13 @@ const portfolioConfig = {
     // Section 1: Google Sheet URL for THIS portfolio
     googleSheet: {
         // 這是所有投資組合共用的 Google Sheet 檔案 ID
-        sheetId: '2PACX-1vTJOnAP0pKYY9aSGqhB3dbKAtzM32FSPHH4J8VKtdM3rBvm97qG2zPMgPfhLAgMzfTkW571ODjEmvVd',
+        sheetId: '2PACX-1vSHW-797FZrmMwApsIYm8hkv_ehu6ws3OhAuAY8I5azo45Lf8-JFwzgRheZr4JJKMzOEtYqBUVUOPVp',
         
         // 這是「投資組合」 (e.g., 全天候策略) 對應的工作表 ID
-        gid: '736791427',
+        gid: '1254072941',
 
         // 這是 S&P 500 指數專用的工作表 ID
-        sp500Gid: '283425635',
+        sp500Gid: '218723572',
 
         // 根據 gid 產生對應的資料 URL
         get dataUrl() { return `https://docs.google.com/spreadsheets/d/e/${this.sheetId}/pub?gid=${this.gid}&single=true&output=csv`; },
@@ -26,22 +26,14 @@ const portfolioConfig = {
                 VOO: 100 
                 
             },
-            CAGR: 0.1479, 
-            volatility: 0.1538, 
-            maxDrawdown: -0.3399,
-            // Use a getter to calculate riskRatio dynamically
-            get riskRatio() {
-                // 'this' refers to the current object (the 'data' object)
-                // Add a check to prevent division by zero
-                if (this.volatility === 0) {
-                    return 0;
-                }
-                return this.CAGR / this.volatility;
-            }
+            CAGR: 0, 
+            volatility: 0, 
+            maxDrawdown: 0
         },
         description: `
         <p class="pb-4">此策略是將所有資金單一投入於Vanguard S&P 500 ETF (VOO)，等同於完全押注於美國最大的500家上市企業。</p>
-        <p class="pb-4">這個組合旨在透過單一ETF，實現對美國大型股市場的極高曝險，以期獲得強勁的資本增長。歷史數據顯示，近十年平均年化報酬率達12.9%，但同時也伴隨著較高的波動與風險。</p>`,
+        <p class="pb-4">這個組合旨在透過單一ETF，實現對美國大型股市場的極高曝險，以期獲得強勁的資本增長。歷史數據顯示，近十年平均年化報酬率達12.9%，但同時也伴隨著較高的波動與風險。</br></p>
+        <p class="pb-4"></br></p>`,
         
         // 改為數組格式
         pros: [

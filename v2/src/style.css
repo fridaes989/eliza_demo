@@ -9,10 +9,11 @@ h1 img {
 
 /* Responsive scrolling and layout fix */
 html {
-    height: 100%;
+    height: 100vh; /* Ensure html tag takes full viewport height */
 }
 body {
-    min-height: 100%;
+    min-height: 100vh; /* Ensure body also takes at least full viewport height */
+    height: 100%; /* For older browser compatibility */
 }
 
 /* Loading overlay styles (framework-agnostic) */
@@ -21,12 +22,12 @@ body {
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
-    background-color: #0D0D0D;
+    height: 100vh; /* Use viewport height to ensure it covers the full screen */
+    background-color: #0D0D0D; /* Same as 'background' color in Tailwind config */
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9999;
+    z-index: 9999; /* Ensure it's on top */
     transition: opacity 0.5s ease-out;
 }
 .loading-content {

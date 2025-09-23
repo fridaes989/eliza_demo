@@ -5,13 +5,13 @@ const portfolioConfig = {
     // Section 1: Google Sheet URL for THIS portfolio
     googleSheet: {
         // 這是所有投資組合共用的 Google Sheet 檔案 ID
-        sheetId: '2PACX-1vTJOnAP0pKYY9aSGqhB3dbKAtzM32FSPHH4J8VKtdM3rBvm97qG2zPMgPfhLAgMzfTkW571ODjEmvVd',
+        sheetId: '2PACX-1vSHW-797FZrmMwApsIYm8hkv_ehu6ws3OhAuAY8I5azo45Lf8-JFwzgRheZr4JJKMzOEtYqBUVUOPVp',
         
         // 這是「投資組合」 (e.g., 全天候策略) 對應的工作表 ID
-        gid: '1808108800',
+        gid: '875507893',
 
         // 這是 S&P 500 指數專用的工作表 ID
-        sp500Gid: '283425635',
+        sp500Gid: '218723572',
 
         // 根據 gid 產生對應的資料 URL
         get dataUrl() { return `https://docs.google.com/spreadsheets/d/e/${this.sheetId}/pub?gid=${this.gid}&single=true&output=csv`; },
@@ -28,26 +28,31 @@ const portfolioConfig = {
             maxDrawdown: 0,
         },
         description: `
-        <p class="pb-4">來自指數基金之父約翰·柏格，其核心理念是簡單、低成本的「買入並持有」被動投資哲學。</p>
-        <p class="pb-4">這個組合的最大優勢在於其極簡的結構和靈活性。投資者可根據自身年齡和風險承受能力來調整股債比例，特別適合新手。</p>
-        <p class="pb-4">它由三種核心基金組成： 本國股票基金、國際股票基金 和 本國債券基金，旨在透過極低的成本實現全球市場的高度分散。</p>
-         <p class="pb-4">一個常見的經驗法則是 <span class="text-primary"> 「債券比例 = 你的年齡」</span>。例如，30歲投資者可配置70%股票和30%債券。.</p>
+        <p class="pb-4">此策略源於指數基金之父約翰·柏格（John Bogle）的被動投資哲學，核心是用最少的基金達到最大程度的全球市場分散，並將成本降至最低。</p>
+        <p class="pb-4">它由三種核心基金組成 ：</p>
+        <ol class="list-decimal list-inside pb-4">
+            <li>本國股票市場基金 (如: VTI)，抓住本國經濟增長紅利。</li>
+            <li>國際股票市場基金 (如: VXUS)，分散地理風險，不錯過世界其他地區的增長機會。</li>
+            <li>本國債券市場基金 (如: BND)，作為投資組合的穩定器，在股市下跌時提供緩衝。</li>
+        </ol>
+        <p class="pb-4">最經典的配置為 <span class="text-primary"> 「60/40 組合」</span>，即60%股票與40%債券。</p>
+        <p class="pb-4">一個常見的預設配置是：42% VTI、18% VXUS、40% BND 。投資者也可根據經驗法則（如 <span class="text-primary">「債券比例 = 您的年齡」</span>）來調整比例</p>
         `,
-        pros: [
-            "極致的分散: 僅用VT和BNDW兩支ETF，便能有效投資全球數十國的股票及債券，實現最大化的資產分散。",
-            "極致的簡單: 將複雜的全球資產配置簡化為僅需管理兩支ETF，對於懶人投資者來說無比便捷。",
-            "避免本國偏好: 相較於以單一國家為主的配置，此組合客觀反映全球經濟權重，對非美國投資者特別具吸引力。"
+         pros: [
+            "極度簡單：僅需管理三檔基金，容易上手與維護。",
+            "成本極低：使用被動指數基金，管理費用通常非常低。",
+            "高度分散：橫跨全球股票和本國債券市場，有效降低單一國家或公司的風險。",
+            "易於再平衡：每年僅需操作一次，將比例調回目標即可。"
+            
         ],
         
         cons: [
-            "劇烈波動與潛在回撤：80%的股票配置使此組合在熊市時回撤劇烈，20%的債券緩衝有限。",
-            "資產類別單一：組合僅包含股票和債券，缺乏能有效對抗停滯性通膨等特定經濟環境的其他資產。",
-            "匯率風險：投資全球市場代表資產以多種貨幣計價，匯率波動將直接影響最終總回報。",
-            "放棄超額回報：此組合目標是獲取全球市場平均回報，代表它永遠無法成為表現最好的，放棄了超額回報的可能。"
+            "不包含其他資產類別：缺乏黃金、不動產(REITs)等可在高通膨時期提供額外保護的資產。",
+            "回報率完全取決於市場：作為被動策略，其表現就是市場的平均表現，不會有超額報酬。"
         ],
-        retirement:"大多數距離退休尚有時日的穩健規劃者",
-        education:"孩子上小學，還有 10 年左右，攻守兼備",
-        housing:"5-7 年的長期購房計畫"
+        retirement:"可依年齡調整股債比，是簡單有效的長期退休規劃",
+        education:"全球分散投資，適合穩健累積10年以上的教育費用",
+        housing:"股債配置攻守兼備，適合5至10年的中期購屋儲蓄"
     }
 };
 

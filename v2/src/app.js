@@ -1,4 +1,4 @@
-// app.js (Final, Complete Version - 2025/09/16)
+// app.js (Final, Corrected Version - 2025/09/16)
 
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof portfolioConfig === 'undefined') {
@@ -34,6 +34,9 @@ async function initializeApp(config) {
         const sp500CsvText = await sp500Response.text();
 
         createApp({
+            components: {
+                'portfolio-page': PortfolioPage
+            },
             setup() {
                 // --- TICKER URLS DATA ---
                 const tickerUrls = {
@@ -95,16 +98,12 @@ async function initializeApp(config) {
                 const isProsExpanded = ref(false);
                 const isConsExpanded = ref(false);
 
-                // Element refs for overflow checking
-                const descriptionEl = ref(null);
-                const prosListEl = ref(null);
-                const consListEl = ref(null);
-                const showDescriptionToggle = ref(false);
-                const showProsToggle = ref(false);
-                const showConsToggle = ref(false);
-                
                 // --- METHODS ---
                 const toggleMenu = () => { isMenuOpen.value = !isMenuOpen.value; };
+                // These methods are called by the child component's emits
+                const updateActiveTab = (newTab) => { activeTab.value = newTab; };
+                const updateSelectedYears = (newYears) => { selectedYears.value = newYears; };
+
                 const openModal = (metricKey) => {
                     modalData.value = metricExplanations[metricKey];
                     isModalOpen.value = true;
@@ -125,10 +124,10 @@ async function initializeApp(config) {
                                 entry[header] = undefined; return;
                             }
                             if (value.includes('%')) {
-                                const numericValue = parseFloat(value.replace('%', '')) / 100;
+                                const numericValue = parseFloat(value.replace(/["%]/g, '')) / 100; // 移除引號和 %
                                 entry[header] = isNaN(numericValue) ? value : numericValue;
                             } else {
-                                const numericValue = Number(value);
+                                const numericValue = Number(value.replace(/[""]/g, '')); // 移除引號
                                 entry[header] = isNaN(numericValue) ? value : numericValue;
                             }
                         });
@@ -154,32 +153,49 @@ async function initializeApp(config) {
 
                 const getCombinedBacktestData = (years) => {
                     if (portfolioRawData.value.length === 0 || sp500RawData.value.length === 0) return [];
+                    
                     let portfolioColumn, sp500Column;
+                    
+                    // --- FIX START: 修正 S&P 500 回測資料的欄位名稱 ---
+                    // 根據新檔案 `墨鏡姊網頁資料 - SPY.csv` 的欄位名稱進行修正
                     if (years === 5) {
-                        portfolioColumn = 'pv5'; sp500Column = 'spy_value_5';
+                        portfolioColumn = 'pv5';
+                        sp500Column = 'spy_pv5'; // 原本是 'spy_value_5'，新檔案中為 'pv5'
                     } else if (years === 3) {
-                        portfolioColumn = 'pv3'; sp500Column = 'spy_value_3';
+                        portfolioColumn = 'pv3';
+                        sp500Column = 'spy_pv3'; // 原本是 'spy_value_3'，新檔案中為 'pv3'
                     } else {
-                        portfolioColumn = 'pv10'; sp500Column = 'spy_value';
+                        portfolioColumn = 'pv10';
+                        sp500Column = 'spy_pv10'; // 10年期欄位名稱 'spy_value' 在新舊檔案中一致
                     }
+                    // --- FIX END ---
+
+                    const portfolioDates = new Set(portfolioRawData.value.map(d => normalizeDate(d.date)));
+                    const sp500Dates = new Set(sp500RawData.value.map(d => normalizeDate(d.date)));
+                    const commonDates = new Set([...portfolioDates].filter(date => sp500Dates.has(date)));
+
                     const sp500Map = new Map(sp500RawData.value.map(d => [normalizeDate(d.date), d]));
-                    return portfolioRawData.value.map(portfolioRow => {
-                        const sp500Row = sp500Map.get(normalizeDate(portfolioRow.date));
+                    
+                    return portfolioRawData.value.filter(portfolioRow => commonDates.has(normalizeDate(portfolioRow.date))).map(portfolioRow => {
+                        const sp500Row = sp500Map.get(normalizeDate(portfolioRow.date)) || {};
                         return {
                             date: portfolioRow.date,
                             portfolio_value: portfolioRow[portfolioColumn],
-                            spy_value: sp500Row ? sp500Row[sp500Column] : undefined,
-                            portfolio_monthly_return: portfolioRow.portfolio_monthly_return,
-                            spy_monthly_return: sp500Row ? sp500Row.spy_monthly_return : undefined,
+                            spy_value: sp500Row[sp500Column]
                         };
-                    }).filter(d => d.date && d.portfolio_value !== undefined && d.spy_value !== undefined);
+                    }).filter(d => d.date && typeof d.portfolio_value === 'number' && typeof d.spy_value === 'number');
                 };
-
-                // Initial Data Parsing (happens before render)
+                
+                // Initial Data Parsing
                 const allPortfolioData = parseCSV(portfolioCsvText);
                 portfolioRawData.value = allPortfolioData;
                 sp500RawData.value = parseCSV(sp500CsvText);
-                volatilityData.value = allPortfolioData.filter(d => d['v-date'] && d.portfolio_vol !== undefined);
+                
+                // --- FIX START: 移除舊的 volatilityData 賦值 ---
+                // volatilityData.value = allPortfolioData.filter(d => d['v-date'] && d.portfolio_vol !== undefined);
+                // 舊的邏輯只從 portfolio data 拿資料，且會因 spy_vol 欄位缺失而失敗
+                // 新的邏輯將在 drawVolatilityChart 函數中動態組合資料
+                // --- FIX END ---
                 
                 const summaryData = allPortfolioData.find(d => d.CAGR10 !== undefined);
                 if (summaryData) {
@@ -206,27 +222,16 @@ async function initializeApp(config) {
                                         label: (context) => {
                                             const dp = chartData[context.dataIndex];
                                             if (!dp) return '';
-
                                             const isPortfolio = context.dataset.label === portfolio.name;
                                             const value = isPortfolio ? dp.portfolio_value : dp.spy_value;
-                                            const monthlyReturn = isPortfolio ? dp.portfolio_monthly_return : dp.spy_monthly_return;
-                                            
                                             const valueFormatted = typeof value === 'number' ? value.toLocaleString() : 'N/A';
-                                            let returnFormatted = '';
-
-                                            if (typeof monthlyReturn === 'number') {
-                                                const returnPct = (monthlyReturn * 100).toFixed(2);
-                                                returnFormatted = ` (${returnPct >= 0 ? '+' : ''}${returnPct}%)`;
-                                            }
-
-                                            return `${context.dataset.label}價值: $${valueFormatted}${returnFormatted}`;
+                                            return `${context.dataset.label}價值: $${valueFormatted}`;
                                         },
                                         afterBody: (tooltipItems) => {
                                             if (!tooltipItems || tooltipItems.length < 2) return '';
                                             const dataIndex = tooltipItems[0].dataIndex;
                                             const dp = chartData[dataIndex];
                                             if (!dp || typeof dp.portfolio_value !== 'number' || typeof dp.spy_value !== 'number' || dp.spy_value === 0) return '';
-                                            
                                             const diff = ((dp.portfolio_value - dp.spy_value) / dp.spy_value * 100).toFixed(2);
                                             return `\n相對表現: ${diff >= 0 ? '+' : ''}${diff}%`;
                                         }
@@ -236,19 +241,53 @@ async function initializeApp(config) {
                         }
                     });
                 };
-
+                
+                // --- FIX START: 重構波動率圖表繪製邏輯 ---
                 const drawVolatilityChart = () => {
-                    if (!volatilityData.value || volatilityData.value.length === 0) return;
-                    const slicedData = volatilityData.value.slice(-(selectedYears.value));
+                    // 1. 建立 S&P 500 的波動率資料對照表
+                    const sp500VolMap = new Map(
+                        sp500RawData.value
+                            .filter(d => d['v-date'])
+                            .map(d => [normalizeDate(d['v-date']), d])
+                    );
+                    
+                    // 2. 組合圖表所需資料
+                    const chartData = portfolioRawData.value
+                        .filter(d => d['v-date'] && d.portfolio_vol !== undefined && sp500VolMap.has(normalizeDate(d['v-date'])))
+                        .map(portfolioRow => {
+                            const sp500Row = sp500VolMap.get(normalizeDate(portfolioRow['v-date'])) || {};
+                            return { // Keep original v-date format for labels
+                                date: portfolioRow['v-date'],
+                                portfolio_vol: typeof portfolioRow.portfolio_vol === 'number' ? portfolioRow.portfolio_vol : parseFloat(String(portfolioRow.portfolio_vol).replace('%',''))/100,
+                                // 優先讀取 spy_vol (舊格式)，若無則讀取 portfolio_vol (新格式)
+                                spy_vol: sp500Row.spy_vol !== undefined ? sp500Row.spy_vol : sp500Row.portfolio_vol
+                            };
+                        })
+                        .filter(d => d.date && !isNaN(d.portfolio_vol) && !isNaN(d.spy_vol));
+                    
+                    if (!chartData || chartData.length === 0) return;
+
+                    // 3. 動態計算日期範圍，篩選出最近 N 年的資料
+                    const latestDateEntry = chartData[chartData.length - 1];
+                    if (!latestDateEntry || !latestDateEntry.date) return;
+
+                    const [latestYear, latestMonth] = String(latestDateEntry.date).split(/[\/-]/).map(Number);
+                    const startYear = latestYear - selectedYears.value;
+
+                    const finalChartData = chartData.filter(d => {
+                        const [year, month] = String(d.date).split(/[\/-]/).map(Number);
+                        // 篩選出大於起始年份，或同年但月份大於等於的資料
+                        return year > startYear || (year === startYear && month >= latestMonth);
+                    });
                     createOrUpdateChart('volatility-chart', {
-                        type: 'line', data: { labels: slicedData.map(d => d['v-date']), datasets: [{ label: portfolio.name, data: slicedData.map(d => d.portfolio_vol), borderColor: '#208065', tension: 0.1, pointRadius: 3, pointHoverRadius: 6 }, { label: 'S&P 500', data: slicedData.map(d => d.spy_vol), borderColor: '#806420', tension: 0.1, pointRadius: 3, pointHoverRadius: 6 }] },
+                        type: 'line', data: { labels: finalChartData.map(d => d.date), datasets: [{ label: portfolio.name, data: finalChartData.map(d => d.portfolio_vol), borderColor: '#208065', tension: 0.1, pointRadius: 3, pointHoverRadius: 6 }, { label: 'S&P 500', data: finalChartData.map(d => d.spy_vol), borderColor: '#806420', tension: 0.1, pointRadius: 3, pointHoverRadius: 6 }] },
                         options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false },
                             scales: { x: { ticks: { color: '#FFF' } }, y: { ticks: { color: '#FFF', callback: value => (value * 100).toFixed(0) + '%' } } },
                             plugins: { legend: { labels: { color: '#FFF' } }, tooltip: { backgroundColor: 'rgba(0, 0, 0, 0.95)', titleColor: '#208065', bodyColor: '#ffffff', borderColor: '#208065', borderWidth: 1,
                                     callbacks: {
-                                        title: ctx => `日期: ${slicedData[ctx[0].dataIndex]['v-date']}`,
+                                        title: ctx => `日期: ${finalChartData[ctx[0].dataIndex].date}`,
                                         label: ctx => {
-                                            const dp = slicedData[ctx.dataIndex];
+                                            const dp = finalChartData[ctx.dataIndex];
                                             if (ctx.dataset.label === portfolio.name) { return `${portfolio.name} 年化波動率: ${(dp.portfolio_vol * 100).toFixed(1)}%`; } else { return `S&P 500 年化波動率: ${(dp.spy_vol * 100).toFixed(1)}%`; }
                                         }
                                     }
@@ -257,6 +296,7 @@ async function initializeApp(config) {
                         }
                     });
                 };
+                // --- FIX END ---
                 
                 const performanceMetrics = computed(() => {
                     if (portfolioRawData.value.length === 0 || sp500RawData.value.length === 0) {
@@ -265,32 +305,33 @@ async function initializeApp(config) {
                     let cagrColumn, volColumn;
                     if (selectedYears.value === 5) {
                         cagrColumn = 'CAGR5'; volColumn = 'v5';
-                    } else if (selectedYears.value === 3) {
+                    }  else if (selectedYears.value === 3) {
                         cagrColumn = 'CAGR3'; volColumn = 'v3';
-                    } else { 
+                    } else {
                         cagrColumn = 'CAGR10'; volColumn = 'v10';
                     }
-                    const portfolioCagrRow = portfolioRawData.value.find(row => row[cagrColumn] !== undefined);
-                    const sp500CagrRow = sp500RawData.value.find(row => row[cagrColumn] !== undefined);
-                    const portfolioCAGR = portfolioCagrRow ? portfolioCagrRow[cagrColumn] : 0;
-                    const sp500CAGR = sp500CagrRow ? sp500CagrRow[cagrColumn] : 0;
-                    const portfolioVolRow = portfolioRawData.value.find(row => row[volColumn] !== undefined);
-                    const sp500VolRow = sp500RawData.value.find(row => row[volColumn] !== undefined);
-                    const portfolioVol = (portfolioVolRow ? portfolioVolRow[volColumn] : 0) || 0;
-                    const sp500Vol = (sp500VolRow ? sp500VolRow[volColumn] : 0) || 0;
+
+                    // --- FIX START: 修正指標計算，確保從各自的檔案讀取 ---
+                    const portfolioRow = portfolioRawData.value.find(row => row[cagrColumn] !== undefined && row[volColumn] !== undefined);
+                    const sp500Row = sp500RawData.value.find(row => row[cagrColumn] !== undefined && row[volColumn] !== undefined);
+                    
+                    const portfolioCAGR = portfolioRow ? portfolioRow[cagrColumn] : 0;
+                    const sp500CAGR = sp500Row ? sp500Row[cagrColumn] : 0;
+
+                    const portfolioVol = portfolioRow ? portfolioRow[volColumn] : 0;
+                    const sp500Vol = sp500Row ? sp500Row[volColumn] : 0;
+                    // --- FIX END ---
+
                     return { portfolioCAGR, sp500CAGR, portfolioVol, sp500Vol, returnDiff: portfolioCAGR - sp500CAGR, volDiff: portfolioVol - sp500Vol };
                 });
 
                 const latestDataDate = computed(() => {
                     const data = portfolioRawData.value;
-                    if (!data || data.length === 0) {
-                        return 'N/A';
-                    }
+                    if (!data || data.length === 0) return 'N/A';
                     const dateEntries = data.filter(d => d.date);
-                    if (dateEntries.length === 0) {
-                        return 'N/A';
-                    }
-                    return dateEntries[dateEntries.length - 1].date;
+                    if (dateEntries.length === 0) return 'N/A';
+                    // 返回 YYYYMM 格式
+                    return String(dateEntries[dateEntries.length - 1].date);
                 });
 
                 // Utility Functions
@@ -316,39 +357,17 @@ async function initializeApp(config) {
 
                 // --- LIFECYCLE HOOK ---
                 onMounted(() => {
-                    nextTick(() => {
-                        drawPieChart();
-                        drawBacktestChart();
-                        drawVolatilityChart();
-                        
-                        if (descriptionEl.value && descriptionEl.value.scrollHeight > descriptionEl.value.clientHeight) {
-                            showDescriptionToggle.value = true;
-                        }
-                        if (prosListEl.value && prosListEl.value.scrollHeight > prosListEl.value.clientHeight) {
-                            showProsToggle.value = true;
-                        }
-                        if (consListEl.value && consListEl.value.scrollHeight > consListEl.value.clientHeight) {
-                            showConsToggle.value = true;
-                        }
-
-                        const loadingOverlay = document.getElementById('loadingOverlay');
-                        const app = document.getElementById('app');
-                        loadingOverlay.style.opacity = '0';
-                        app.style.opacity = '1';
-                        setTimeout(() => { loadingOverlay.style.display = 'none'; }, 500);
-                    });
+                    nextTick(() => { drawPieChart(); drawBacktestChart(); drawVolatilityChart(); });
                     document.title = `${portfolio.name} - 墨鏡姐複利樹`;
                 });
 
                 // --- EXPOSE TO TEMPLATE ---
                 return { 
-                    portfolio, selectedYears, performanceMetrics, pieColors, formatK, pct, activeTab, isMenuOpen, toggleMenu, 
-                    isDescriptionExpanded, isProsExpanded, isConsExpanded,
-                    descriptionEl, prosListEl, consListEl, 
-                    showDescriptionToggle, showProsToggle, showConsToggle,
-                    latestDataDate,
+                    portfolio, selectedYears, performanceMetrics, pieColors, formatK, pct, activeTab, isMenuOpen, toggleMenu,
+                    isDescriptionExpanded, isProsExpanded, isConsExpanded, latestDataDate,
                     isModalOpen, modalData, openModal, closeModal,
-                    tickerUrls
+                    tickerUrls,
+                    metricExplanations, charts, updateActiveTab, updateSelectedYears
                 };
             }
         }).mount('#app');
@@ -358,6 +377,15 @@ async function initializeApp(config) {
         const loadingContent = document.querySelector('.loading-content');
         if (loadingContent) {
             loadingContent.innerHTML = '<h3>資料載入失敗</h3><p>請檢查網路連線或 Google Sheet 發布設定。</p>';
+        }
+    } finally {
+        // This block ensures the loading screen is hidden, even if data fetching fails.
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const app = document.getElementById('app');
+        if (loadingOverlay && app) {
+            loadingOverlay.style.opacity = '0';
+            app.style.opacity = '1';
+            setTimeout(() => { loadingOverlay.style.display = 'none'; }, 500);
         }
     }
 }

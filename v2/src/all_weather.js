@@ -5,13 +5,13 @@ const portfolioConfig = {
     // Section 1: Google Sheet URL for THIS portfolio
     googleSheet: {
         // 這是所有投資組合共用的 Google Sheet 檔案 ID
-        sheetId: '2PACX-1vTJOnAP0pKYY9aSGqhB3dbKAtzM32FSPHH4J8VKtdM3rBvm97qG2zPMgPfhLAgMzfTkW571ODjEmvVd',
+        sheetId: '2PACX-1vSHW-797FZrmMwApsIYm8hkv_ehu6ws3OhAuAY8I5azo45Lf8-JFwzgRheZr4JJKMzOEtYqBUVUOPVp',
         
         // 這是「投資組合」 (e.g., 全天候策略) 對應的工作表 ID
-        gid: '1457921733',
+        gid: '1317863142',
 
         // 這是 S&P 500 指數專用的工作表 ID
-        sp500Gid: '283425635',
+        sp500Gid: '218723572',
 
         // 根據 gid 產生對應的資料 URL
         get dataUrl() { return `https://docs.google.com/spreadsheets/d/e/${this.sheetId}/pub?gid=${this.gid}&single=true&output=csv`; },
@@ -22,7 +22,7 @@ const portfolioConfig = {
      portfolio: {
         name: "全天候策略",
         data: {
-            allocations: { VTI: 30, TLT: 40, IEF: 15, GLD: 7.5, GSG: 7.5 },
+            allocations: { VTI: 30, TLT: 40, IEF: 15, GLD: 7.5, DBC: 7.5 },
             // 以下數值將從 Google Sheet 動態載入，此處設為 0 作為初始預設值
             CAGR: 0,
             volatility: 0,
