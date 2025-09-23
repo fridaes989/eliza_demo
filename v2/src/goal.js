@@ -55,10 +55,10 @@ const app = createApp({
         };
 
         const strategyReasons = { 
-            '全天候策略': '此策略提供良好的風險分散，適合追求穩定報酬的投資者', 
+            '全天候策略': '提供良好的風險分散，適合追求穩定報酬的投資者', 
             '三基金組合': '簡單而有效的配置，適合長期投資且希望降低管理複雜度的投資者', 
             '核心四基金': '「三基金組合」的進階選項，增加房地產以對抗通膨。', 
-            '積極型股債組合': '較高的股票配置能帶來更好的長期報酬，適合年輕且風險承受度高的投資者',
+            '積極型股債組合': '較高的股票配置，適合年輕且風險承受度高的投資者',
             '巴菲特推薦': '完全相信並押注於美國最具代表性的 500 家頂級企業的長期增長。'  
         };
 
@@ -400,18 +400,24 @@ const app = createApp({
             }
         };
         
-        const formatCurrency = (value) => {
+        const formatCurrency = (value, unit = '美元') => {
             const num = Math.round(value);
             let formattedValue;
-
-            if (num >= 1000000) {
-                formattedValue = (num / 1000000).toFixed(2) + 'M';
-            } else if (num >= 1000) {
-                formattedValue = (num / 1000).toFixed(1) + 'K';
-            } else {
+        
+            if (unit === '萬美元') {
+                // For '萬美元', we just format the number without K/M conversion
                 formattedValue = num.toLocaleString();
+            } else {
+                // For '美元', use K/M for large numbers
+                if (num >= 1000000) {
+                    formattedValue = (num / 1000000).toFixed(2) + 'M';
+                } else if (num >= 1000) {
+                    formattedValue = (num / 1000).toFixed(1) + 'K';
+                } else {
+                    formattedValue = num.toLocaleString();
+                }
             }
-            return `${formattedValue} 美元`;
+            return `${formattedValue} ${unit}`;
         };
         
         const getCalculatedTargetAmount = (goal) => { 
@@ -555,13 +561,14 @@ const app = createApp({
         const updateStrategyRecommendations = (goalAmount, years, currentAssetsUSD) => { 
             const recommendations = Object.entries(strategies).map(([name, strategy]) => { 
                 const calcResult = calculateRequiredMonthlyInvestmentForStrategy(goalAmount, years, strategy.expectedReturn, currentAssetsUSD); 
-                const requiredMonthlyDisplay = form.value.goalType === 'retirement' ? calcResult.amountUSD : calcResult.amountUSD / 10000;
-                return { name, strategy, requiredMonthly: requiredMonthlyDisplay, isMetByInitial: calcResult.isMetByInitial }; 
+                const isRetirement = form.value.goalType === 'retirement';
+                const requiredMonthlyDisplay = isRetirement ? calcResult.amountUSD : calcResult.amountUSD / 10000;
+                return { name, strategy, requiredMonthly: requiredMonthlyDisplay, isMetByInitial: calcResult.isMetByInitial, unit: isRetirement ? '美元' : '萬美元' }; 
             }); 
             recommendationResults.value = recommendations.map(rec => ({ 
                 name: rec.name, 
                 expectedReturn: rec.strategy.expectedReturn, 
-                requiredMonthly: rec.requiredMonthly, 
+                ...rec, // This will include requiredMonthly and unit
                 reason: strategyReasons[rec.name], isMetByInitial: rec.isMetByInitial,
                 url: rec.strategy.url,
                 simplifiedAllocation: rec.strategy.simplifiedAllocation, // This was already here, which is great!
