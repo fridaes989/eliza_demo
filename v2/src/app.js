@@ -16,6 +16,8 @@ const { createApp, ref, watch, onMounted, nextTick, computed } = Vue;
 
 async function initializeApp(config) {
     const { dataUrl, sp500DataUrl } = config.googleSheet;
+    const maxDrawdownGid = '916830514';
+    const maxDrawdownDataUrl = `https://docs.google.com/spreadsheets/d/e/${config.googleSheet.sheetId}/pub?gid=${maxDrawdownGid}&single=true&output=csv`;
 
     if (!dataUrl || !sp500DataUrl) {
         console.error("The portfolio config object is missing required Google Sheet URLs.");
@@ -23,15 +25,17 @@ async function initializeApp(config) {
     }
 
     try {
-        const [portfolioResponse, sp500Response] = await Promise.all([
+        const [portfolioResponse, sp500Response, maxDrawdownResponse] = await Promise.all([
             fetch(dataUrl),
-            fetch(sp500DataUrl)
+            fetch(sp500DataUrl),
+            fetch(maxDrawdownDataUrl)
         ]);
 
-        if (!portfolioResponse.ok || !sp500Response.ok) throw new Error(`Network response was not ok.`);
+        if (!portfolioResponse.ok || !sp500Response.ok || !maxDrawdownResponse.ok) throw new Error(`Network response was not ok.`);
 
         const portfolioCsvText = await portfolioResponse.text();
         const sp500CsvText = await sp500Response.text();
+        const maxDrawdownCsvText = await maxDrawdownResponse.text();
 
         createApp({
             components: {
@@ -97,6 +101,8 @@ async function initializeApp(config) {
                 const isDescriptionExpanded = ref(false); 
                 const isProsExpanded = ref(false);
                 const isConsExpanded = ref(false);
+                const performanceThroughDate = ref('');
+                const performancePeakDate = ref('');
 
                 // --- METHODS ---
                 const toggleMenu = () => { isMenuOpen.value = !isMenuOpen.value; };
@@ -118,21 +124,50 @@ async function initializeApp(config) {
                     return lines.map(line => {
                         const values = line.split(',');
                         const entry = {};
-                        headers.forEach((header, i) => {
-                            let value = values[i] ? values[i].trim() : '';
-                            if (value === '') {
-                                entry[header] = undefined; return;
-                            }
-                            if (value.includes('%')) {
-                                const numericValue = parseFloat(value.replace(/["%]/g, '')) / 100; // 移除引號和 %
+                        headers.forEach((header, i) => { // FIX: Refined parsing logic
+                            let value = values[i] ? values[i].trim().replace(/"/g, '') : '';
+                            if (value === '') { entry[header] = undefined; return; }
+
+                            // Only convert to number if it's a percentage or a valid number string
+                            // This prevents dates like '20230323' from being converted to a number.
+                            const isNumericString = !isNaN(parseFloat(value)) && isFinite(value);
+
+                            if (value.includes('%')) { // Handle percentages
+                                const numericValue = parseFloat(value.replace('%', '')) / 100;
                                 entry[header] = isNaN(numericValue) ? value : numericValue;
-                            } else {
-                                const numericValue = Number(value.replace(/[""]/g, '')); // 移除引號
-                                entry[header] = isNaN(numericValue) ? value : numericValue;
+                            } else if (isNumericString && header.toLowerCase() !== 'date' && header.toLowerCase() !== 'v-date') { // Handle numbers, but not in date columns
+                                entry[header] = Number(value);
+                            } else { // Keep as string (for dates and other text)
+                                entry[header] = value;
                             }
                         });
                         return entry;
                     });
+                };
+
+                // A simpler parser specifically for the max drawdown sheet, which has a known, fixed structure.
+                // This avoids the complex type-guessing of the main parseCSV function.
+                const parseMaxDrawdownCSV = (csv) => {
+                    const lines = csv.trim().split('\n');
+                    if (lines.length < 4) return []; // We need at least 4 rows (headers, mdd, throughDate, peakDate)
+
+                    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+                    const mddValues = lines[1].split(',');
+                    const throughDateValues = lines[2].split(',');
+                    const peakDateValues = lines[3].split(',');
+
+                    const data = {};
+                    headers.forEach((header, i) => {
+                        if (i > 0) { // Skip the first column header (e.g., 'Portfolio')
+                            const mddStr = mddValues[i] ? mddValues[i].trim().replace(/["%]/g, '') : '0';
+                            data[header] = {
+                                maxDrawdown: parseFloat(mddStr) / 100,
+                                throughDate: throughDateValues[i] ? throughDateValues[i].trim().replace(/"/g, '') : '',
+                                peakDate: peakDateValues[i] ? peakDateValues[i].trim().replace(/"/g, '') : ''
+                            };
+                        }
+                    });
+                    return data;
                 };
 
                 const normalizeDate = (dateInput) => {
@@ -199,9 +234,19 @@ async function initializeApp(config) {
                 
                 const summaryData = allPortfolioData.find(d => d.CAGR10 !== undefined);
                 if (summaryData) {
-                    portfolio.data.CAGR = summaryData.CAGR10 || 0;
-                    portfolio.data.volatility = summaryData.v10 || 0;
-                    portfolio.data.maxDrawdown = summaryData.MDD || 0;
+                    portfolio.data.CAGR = summaryData.CAGR10 || 0; // Default to 10-year
+                    portfolio.data.volatility = summaryData.v10 || 0; // Default to 10-year
+                }
+
+                // Parse and apply max drawdown and through date from the new sheet
+                const maxDrawdownData = parseMaxDrawdownCSV(maxDrawdownCsvText);
+                const portfolioColumnKey = portfolio.columnName.toLowerCase();
+                
+                if (maxDrawdownData[portfolioColumnKey]) {
+                    const data = maxDrawdownData[portfolioColumnKey];
+                    portfolio.data.maxDrawdown = !isNaN(data.maxDrawdown) ? data.maxDrawdown : 0;
+                    performanceThroughDate.value = data.throughDate || '';
+                    performancePeakDate.value = data.peakDate || '';
                 }
 
                 // Chart Drawing Functions
@@ -365,7 +410,7 @@ async function initializeApp(config) {
                 return { 
                     portfolio, selectedYears, performanceMetrics, pieColors, formatK, pct, activeTab, isMenuOpen, toggleMenu,
                     isDescriptionExpanded, isProsExpanded, isConsExpanded, latestDataDate,
-                    isModalOpen, modalData, openModal, closeModal,
+                    isModalOpen, modalData, openModal, closeModal, performanceThroughDate, performancePeakDate,
                     tickerUrls,
                     metricExplanations, charts, updateActiveTab, updateSelectedYears
                 };

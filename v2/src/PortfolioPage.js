@@ -124,6 +124,14 @@ const PortfolioPage = {
                                         <div class="text-2xl font-bold">{{ (portfolio.data.CAGR / portfolio.data.volatility).toFixed(2) }}</div>
                                      </div>
                                  </div>
+                                 <div v-if="performancePeakDate || performanceThroughDate" class="text-left text-sm text-gray-400 mt-4 space-y-1 space-x-2">
+                                    <span v-if="performancePeakDate">
+                                        波段高點日期：{{ performancePeakDate }}
+                                    </span>
+                                    <span v-if="performanceThroughDate">
+                                        波段低點日期：{{ performanceThroughDate }}
+                                    </span>
+                                 </div>
                             </div>
                         </div>
                         
@@ -188,7 +196,7 @@ const PortfolioPage = {
                                                 <td class="p-3 border-t border-gray-700 font-bold">年化波動率</td>
                                                 <td class="p-3 border-t border-gray-700 text-center font-bold text-primary">{{ pct(performanceMetrics.portfolioVol) }}</td>
                                                 <td class="p-3 border-t border-gray-700 text-center">{{ pct(performanceMetrics.sp500Vol) }}</td>
-                                                <td class="p-3 border-t border-gray-700 text-center" :class="performanceMetrics.volDiff <= 0 ? 'text-success' : 'text-error'">
+                                                <td class="p-3 border-t border-gray-700 text-center" :class="performanceMetrics.volDiff <= 0 ? 'text-primary' : 'text-error'">
                                                     {{ (performanceMetrics.volDiff >= 0 ? '+' : '') + pct(performanceMetrics.volDiff) }}
                                                 </td>
                                             </tr>
@@ -196,7 +204,7 @@ const PortfolioPage = {
                                                 <td class="p-3 border-t border-gray-700 font-bold">風險調整報酬</td>
                                                 <td class="p-3 border-t border-gray-700 text-center font-bold text-primary">{{ (performanceMetrics.portfolioCAGR / performanceMetrics.portfolioVol).toFixed(2) }}</td>
                                                 <td class="p-3 border-t border-gray-700 text-center">{{ (performanceMetrics.sp500CAGR / performanceMetrics.sp500Vol).toFixed(2) }}</td>
-                                                <td class="p-3 border-t border-gray-700 text-center" :class="(performanceMetrics.portfolioCAGR / performanceMetrics.portfolioVol) >= (performanceMetrics.sp500CAGR / performanceMetrics.sp500Vol) ? 'text-success' : 'text-error'">
+                                                <td class="p-3 border-t border-gray-700 text-center" :class="(performanceMetrics.portfolioCAGR / performanceMetrics.portfolioVol) >= (performanceMetrics.sp500CAGR / performanceMetrics.sp500Vol) ? 'text-primary' : 'text-error'">
                                                     {{ ((performanceMetrics.portfolioCAGR / performanceMetrics.portfolioVol) - (performanceMetrics.sp500CAGR / performanceMetrics.sp500Vol) >= 0 ? '+' : '') + ((performanceMetrics.portfolioCAGR / performanceMetrics.portfolioVol) - (performanceMetrics.sp500CAGR / performanceMetrics.sp500Vol)).toFixed(2) }}
                                                 </td>
                                             </tr>
@@ -276,7 +284,9 @@ const PortfolioPage = {
         isProsExpanded: Boolean,
         isConsExpanded: Boolean,
         performanceMetrics: Object,
-        latestDataDate: String
+        latestDataDate: String,
+        performanceThroughDate: String,
+        performancePeakDate: String
     }, // Closing bracket for props array
     emits: [
         'toggle-menu', 'open-modal', 'close-modal',

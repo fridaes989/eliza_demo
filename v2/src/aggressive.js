@@ -1,4 +1,4 @@
-// src/all_weather.js
+// src/aggressive.js
 
 // 這個物件變數是 app.js 將讀取的設定檔
 const portfolioConfig = {
@@ -21,6 +21,7 @@ const portfolioConfig = {
     // Section 2: Portfolio-specific details
     portfolio: {
         name: "積極型股債組合",
+        columnName: "aggressive", // Corresponds to the header in the new sheet
         data: {
             allocations: { VT: 80, BNDW: 20 },
             CAGR: 0, 
@@ -34,7 +35,7 @@ const portfolioConfig = {
         
         // 改為數組格式
         pros: [
-            "極致的分散: 僅用VT和BNDW兩支ETF，便能有效投資全球數十國的股票及債券，實現最大化的資產分散。",
+            "極致的分散: 僅用VT和BNDW兩支ETF，便能有效投資全球數十國的股票及債券，實現最大化的全球市場分散。",
             "極致的簡單: 將複雜的全球資產配置簡化為僅需管理兩支ETF，對於懶人投資者來說無比便捷。",
             "避免本國偏好: 相較於以單一國家為主的配置，此組合客觀反映全球經濟權重，對非美國投資者特別具吸引力。"
         ],

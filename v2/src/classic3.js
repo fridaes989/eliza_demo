@@ -1,4 +1,4 @@
-// src/all_weather.js
+// src/classic3.js
 
 // 這個物件變數是 app.js 將讀取的設定檔
 const portfolioConfig = {
@@ -21,6 +21,7 @@ const portfolioConfig = {
     // Section 2: Portfolio-specific details
      portfolio: {
         name: "三基金組合",
+        columnName: "classic3", // Corresponds to the header in the new sheet
         data: {
             allocations: { VTI: 42, VXUS: 18, BND: 40 },
             CAGR: 0, 
@@ -35,8 +36,12 @@ const portfolioConfig = {
             <li>國際股票市場基金 (如: VXUS)，分散地理風險，不錯過世界其他地區的增長機會。</li>
             <li>本國債券市場基金 (如: BND)，作為投資組合的穩定器，在股市下跌時提供緩衝。</li>
         </ol>
+        <h3 class="pb-4">關於配置比例的說明</h3>
         <p class="pb-4">最經典的配置為 <span class="text-primary"> 「60/40 組合」</span>，即60%股票與40%債券。</p>
         <p class="pb-4">一個常見的預設配置是：42% VTI、18% VXUS、40% BND 。投資者也可根據經驗法則（如 <span class="text-primary">「債券比例 = 您的年齡」</span>）來調整比例</p>
+        <p class="pb-4">「墨鏡姐複利樹」預設的，是一個帶有「美國偏好」的經典 60/40 配置（股票部分約 70% 為美股，30% 為國際股）。這背後的理念是，美國經濟作為全球最強大的引擎，其穩定性和增長潛力值得我們給予更高的權重。</p>
+        <p class="pb-4">然而，另一種嚴格的被動投資哲學，是採用「全球市值加權」股票部分約 60% 為美股，40% 為國際股，完全按照各國股市的實際大小來分配，不做任何主觀偏好。</p>
+        <p class="pb-4">這兩種理念都非常優秀，沒有絕對的對錯。 「墨鏡姐複利樹」鼓勵您理解這兩種思路，並找到最適合您自己信念的配置。</p>
         `,
          pros: [
             "極度簡單：僅需管理三檔基金，容易上手與維護。",
@@ -66,4 +71,3 @@ const portfolioConfig = {
  * - voo: 736791427
  * 3. 修改 portfolio 物件中的 name, allocations, description, pros, cons 等資訊。
  */
-

@@ -21,6 +21,7 @@ const portfolioConfig = {
     // Section 2: Portfolio-specific details
    portfolio: {
         name: "核心四基金",
+        columnName: "core4", // Corresponds to the header in the new sheet
         data: {
             allocations: {  
                 VTI: 50,    // Total Stock Market Index Fund
