@@ -91,6 +91,13 @@ async function initializeApp(config) {
                 const selectedYears = ref(10);
                 const pieColors = ['#208065', '#40A080', '#60C0A0', '#80E0C0', '#A0FFA0', '#806420'];
                 const charts = {};
+
+                // Colors for the simplified stock/bond/other chart
+                const simplifiedPieColors = {
+                    '股票': 'rgba(58, 134, 255, 1)',
+                    '債券': 'rgba(58, 134, 255, 0.5)',
+                    '其他': 'rgba(58, 134, 255, 0.25)'
+                };
                 
                 // Menu and Modal states
                 const isMenuOpen = ref(false);
@@ -251,7 +258,29 @@ async function initializeApp(config) {
 
                 // Chart Drawing Functions
                 const createOrUpdateChart = (id, config) => { if (charts[id]) { charts[id].destroy(); } const ctx = document.getElementById(id)?.getContext('2d'); if (ctx) { charts[id] = new Chart(ctx, config); } };
-                const drawPieChart = () => createOrUpdateChart('pie-chart', { type: 'doughnut', data: { labels: Object.keys(portfolio.data.allocations), datasets: [{ data: Object.values(portfolio.data.allocations), backgroundColor: pieColors, borderWidth: 2, borderColor: '#0D0D0D' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+                
+                const drawPieChart = () => {
+                    createOrUpdateChart('pie-chart', { 
+                        type: 'doughnut', 
+                        data: { 
+                            labels: Object.keys(portfolio.data.allocations), 
+                            datasets: [{ data: Object.values(portfolio.data.allocations), backgroundColor: pieColors, borderWidth: 2, borderColor: '#1A1A1A' }] 
+                        }, 
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } 
+                    });
+                };
+
+                const drawSimplifiedPieChart = () => {
+                    const simplifiedData = portfolio.simplifiedAllocation;
+                    const labels = Object.keys(simplifiedData);
+                    const data = Object.values(simplifiedData);
+                    const backgroundColors = labels.map(label => simplifiedPieColors[label] || '#888');
+
+                    createOrUpdateChart('simplified-pie-chart', {
+                        type: 'doughnut', data: { labels: labels, datasets: [{ data: data, backgroundColor: backgroundColors, borderWidth: 2, borderColor: '#1A1A1A' }] }, 
+                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } 
+                    });
+                };
 
                 const drawBacktestChart = () => {
                     const chartData = getCombinedBacktestData(selectedYears.value);
@@ -385,7 +414,12 @@ async function initializeApp(config) {
                 
                 // --- WATCHERS ---
                 watch(selectedYears, () => {
-                    drawBacktestChart();
+                    // Only redraw visible charts
+                    if (activeTab.value === 'backtest') {
+                        drawBacktestChart();
+                    } else if (activeTab.value === 'volatility') {
+                        drawVolatilityChart();
+                    }
                     drawVolatilityChart();
                 });
                 watch(activeTab, (newTab) => { nextTick(() => { if (newTab === 'backtest') drawBacktestChart(); else if (newTab === 'volatility') drawVolatilityChart(); }); });
@@ -402,14 +436,19 @@ async function initializeApp(config) {
 
                 // --- LIFECYCLE HOOK ---
                 onMounted(() => {
-                    nextTick(() => { drawPieChart(); drawBacktestChart(); drawVolatilityChart(); });
+                    nextTick(() => { 
+                        drawPieChart(); 
+                        drawSimplifiedPieChart();
+                        drawBacktestChart(); 
+                        drawVolatilityChart(); 
+                    });
                     document.title = `${portfolio.name} - 墨鏡姐複利樹`;
                 });
 
                 // --- EXPOSE TO TEMPLATE ---
                 return { 
                     portfolio, selectedYears, performanceMetrics, pieColors, formatK, pct, activeTab, isMenuOpen, toggleMenu,
-                    isDescriptionExpanded, isProsExpanded, isConsExpanded, latestDataDate,
+                    isDescriptionExpanded, isProsExpanded, isConsExpanded, latestDataDate, simplifiedAllocation: portfolio.simplifiedAllocation, simplifiedPieColors, drawPieChart, drawSimplifiedPieChart,
                     isModalOpen, modalData, openModal, closeModal, performanceThroughDate, performancePeakDate,
                     tickerUrls,
                     metricExplanations, charts, updateActiveTab, updateSelectedYears

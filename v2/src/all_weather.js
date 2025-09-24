@@ -29,6 +29,7 @@ const portfolioConfig = {
             volatility: 0,
             maxDrawdown: 0,
         },
+        simplifiedAllocation: { '股票': 30, '債券': 55, '其他': 15 },
         description: `<p class='pb-4'>全天候策略 (All-Weather Strategy) 是一個由全球最大避險基金「橋水基金」的創辦人瑞·達利歐(Ray Dalio)所創造的著名投資組合策略。</p>
         <p class='pb-4'>其核心理念非常簡單卻強大：不要試圖去預測未來的經濟走向，而是建立一個在任何經濟環境下（無論晴天或雨天）都能有相對穩健表現的投資組合。</p>        
         <p class="pb-4">它將經濟環境分為經濟成長高低、通貨膨脹高低四種「季節」，並配置在不同季節中表現良好的資產。放棄預測，旨在平衡抵禦不同經濟環境的風險，追求絕對穩健。</p>

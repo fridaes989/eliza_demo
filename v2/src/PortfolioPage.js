@@ -76,20 +76,40 @@ const PortfolioPage = {
                         <div class="lg:col-span-5 flex flex-col gap-6">
                             <div class="bg-surface rounded-lg p-6">
                                 <h3 class="text-xl font-bold mb-4">組成標的與比例</h3>
-                                <div class="flex flex-col md:flex-row items-center gap-6">
-                                    <div class="pie-chart-container"><canvas id="pie-chart"></canvas></div>
-                                    <div class="w-full space-y-3">
-                                        <div v-for="(percent, asset) in portfolio.data.allocations" :key="asset">
-                                            <a v-if="tickerUrls[asset]" :href="tickerUrls[asset]" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 bg-background/50 p-3 rounded-lg hover:bg-gray-800 transition-colors">
-                                                <div class="w-4 h-4 rounded" :style="{ backgroundColor: pieColors[Object.keys(portfolio.data.allocations).indexOf(asset)] }"></div>
-                                                <span>{{ asset }}: {{ percent }}%</span>
-                                            </a>
-                                            <div v-else class="flex items-center gap-3 bg-background/50 p-3 rounded-lg">
-                                                <div class="w-4 h-4 rounded" :style="{ backgroundColor: pieColors[Object.keys(portfolio.data.allocations).indexOf(asset)] }"></div>
+                                <div class="relative" @touchstart="handleTouchStart" @touchend="handleTouchEnd">
+                                    <!-- Slide 1: Detailed Allocation -->
+                                    <div v-if="activePieChart === 'detailed'" class="flex flex-col md:flex-row items-center gap-6">
+                                        <div class="pie-chart-container"><canvas id="pie-chart"></canvas></div>
+                                        <div class="w-full space-y-3">
+                                            <div v-for="(percent, asset) in portfolio.data.allocations" :key="asset">
+                                                <a v-if="tickerUrls[asset]" :href="tickerUrls[asset]" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 bg-background/50 p-3 rounded-lg hover:bg-gray-800 transition-colors">
+                                                    <div class="w-4 h-4 rounded" :style="{ backgroundColor: pieColors[Object.keys(portfolio.data.allocations).indexOf(asset)] }"></div>
+                                                    <span>{{ asset }}: {{ percent }}%</span>
+                                                </a>
+                                                <div v-else class="flex items-center gap-3 bg-background/50 p-3 rounded-lg">
+                                                    <div class="w-4 h-4 rounded" :style="{ backgroundColor: pieColors[Object.keys(portfolio.data.allocations).indexOf(asset)] }"></div>
+                                                    <span>{{ asset }}: {{ percent }}%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Slide 2: Simplified Allocation -->
+                                    <div v-if="activePieChart === 'simplified'" class="flex flex-col md:flex-row items-center gap-6">
+                                        <div class="pie-chart-container"><canvas id="simplified-pie-chart"></canvas></div>
+                                        <div class="w-full space-y-3">
+                                            <div v-for="(percent, asset) in simplifiedAllocation" :key="asset" class="flex items-center gap-3 bg-background/50 p-3 rounded-lg">
+                                                <div class="w-4 h-4 rounded" :style="{ backgroundColor: simplifiedPieColors[asset] }"></div>
                                                 <span>{{ asset }}: {{ percent }}%</span>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+
+                                <!-- Carousel Indicators -->
+                                <div class="flex justify-center items-center gap-3 mt-4">
+                                    <button @click="setActivePieChart('detailed')" class="w-8 h-2 rounded-full transition-colors" :class="activePieChart === 'detailed' ? 'bg-primary' : 'bg-gray-600 hover:bg-gray-500'"></button>
+                                    <button @click="setActivePieChart('simplified')" class="w-8 h-2 rounded-full transition-colors" :class="activePieChart === 'simplified' ? 'bg-primary' : 'bg-gray-600 hover:bg-gray-500'"></button>
                                 </div>
                             </div>
                             <div class="bg-surface rounded-lg p-6">
@@ -286,7 +306,11 @@ const PortfolioPage = {
         performanceMetrics: Object,
         latestDataDate: String,
         performanceThroughDate: String,
-        performancePeakDate: String
+        performancePeakDate: String,
+        simplifiedAllocation: Object,
+        simplifiedPieColors: Object,
+        drawPieChart: Function,
+        drawSimplifiedPieChart: Function
     }, // Closing bracket for props array
     emits: [
         'toggle-menu', 'open-modal', 'close-modal',
@@ -300,7 +324,7 @@ const PortfolioPage = {
         pct(n) { return (n * 100).toFixed(1) + '%'; }
     },    
     setup(props, { emit }) {
-        const { ref, onMounted, nextTick, watch } = Vue;
+        const { ref, onMounted, nextTick, watch, computed } = Vue;
 
         // Refs for the containers to check for overflow
         const descriptionContainerEl = ref(null);
@@ -311,6 +335,39 @@ const PortfolioPage = {
         const showDescriptionToggle = ref(false);
         const showProsToggle = ref(false);
         const showConsToggle = ref(false);
+
+        const activePieChart = ref('detailed');
+
+        // --- Swipe Gesture Logic for Carousel ---
+        const touchStartX = ref(0);
+
+        const handleTouchStart = (event) => {
+            touchStartX.value = event.changedTouches[0].screenX;
+        };
+
+        const handleTouchEnd = (event) => {
+            const touchEndX = event.changedTouches[0].screenX;
+            const swipeDistance = touchEndX - touchStartX.value;
+            const swipeThreshold = 50; // Minimum pixels for a swipe
+
+            if (Math.abs(swipeDistance) < swipeThreshold) return; // Not a swipe
+
+            if (swipeDistance < 0 && activePieChart.value === 'detailed') {
+                // Swiped Left: Go to Simplified
+                setActivePieChart('simplified');
+            } else if (swipeDistance > 0 && activePieChart.value === 'simplified') {
+                // Swiped Right: Go to Detailed
+                setActivePieChart('detailed');
+            }
+        };
+
+        const setActivePieChart = (chartType) => {
+            activePieChart.value = chartType;
+            nextTick(() => {
+                if (chartType === 'detailed' && props.drawPieChart) props.drawPieChart();
+                if (chartType === 'simplified' && props.drawSimplifiedPieChart) props.drawSimplifiedPieChart();
+            });
+        };
 
         const checkOverflow = () => {
             nextTick(() => {
@@ -331,7 +388,9 @@ const PortfolioPage = {
         // Expose refs to the template
         return {
             descriptionContainerEl, prosContainerEl, consContainerEl,
-            showDescriptionToggle, showProsToggle, showConsToggle
+            showDescriptionToggle, showProsToggle, showConsToggle,
+            activePieChart, setActivePieChart,
+            handleTouchStart, handleTouchEnd
         };
     }
 };

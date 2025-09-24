@@ -31,6 +31,7 @@ const portfolioConfig = {
             volatility: 0, 
             maxDrawdown: 0
         },
+        simplifiedAllocation: { '股票': 100 },
         description: `
         <p class="pb-4">此策略是將所有資金單一投入於Vanguard S&P 500 ETF (VOO)，等同於完全押注於美國最大的500家上市企業。</p>
         <p class="pb-4">這個組合旨在透過單一ETF，實現對美國大型股市場的極高曝險，以期獲得強勁的資本增長。自成立以來，平均年化報酬率達14.2%，但同時也伴隨著較高的波動與風險。</br></p>

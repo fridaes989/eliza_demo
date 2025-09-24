@@ -33,6 +33,7 @@ const portfolioConfig = {
             volatility: 0,
             maxDrawdown: 0
         },
+        simplifiedAllocation: { '股票': 70, '債券': 20, '其他': 10 },
         description: `
         <p class="pb-4">此為增長型資產配置策略，在經典三基金組合基礎上，額外納入<span class="text-primary">不動產基金（REITs）</span>，以增強抗通膨能力。</p>
         <p class="pb-4">該組合由50%美國股票、20%國際股票、10%不動產及20%美國債券組成，旨在透過更多元化的資產類別。</p>

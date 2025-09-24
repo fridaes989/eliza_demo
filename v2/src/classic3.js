@@ -28,6 +28,7 @@ const portfolioConfig = {
             volatility: 0, 
             maxDrawdown: 0,
         },
+        simplifiedAllocation: { '股票': 60, '債券': 40 },
         description: `
         <p class="pb-4">此策略源於指數基金之父約翰·柏格（John Bogle）的被動投資哲學，核心是用最少的基金達到最大程度的全球市場分散，並將成本降至最低。</p>
         <p class="pb-4">它由三種核心基金組成 ：</p>
