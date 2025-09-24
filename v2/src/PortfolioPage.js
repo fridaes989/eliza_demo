@@ -120,28 +120,28 @@ const PortfolioPage = {
                                             <span>年化報酬率</span>
                                             <i @click="openModal('cagr')" class="mdi mdi-information-outline cursor-pointer hover:text-primary transition-colors"></i>
                                         </div>
-                                        <div class="text-2xl font-bold text-primary">{{ pct(portfolio.data.CAGR) }}</div>
+                                        <div class="text-2xl font-bold text-primary  pt-1">{{ pct(portfolio.data.CAGR) }}</div>
                                      </div>
                                      <div class="bg-background p-4 rounded-lg">
                                         <div class="flex items-center gap-1 text-sm text-gray-400">
                                             <span>年化波動率</span>
                                             <i @click="openModal('volatility')" class="mdi mdi-information-outline cursor-pointer hover:text-primary transition-colors"></i>
                                         </div>
-                                        <div class="text-2xl font-bold">{{ pct(portfolio.data.volatility) }}</div>
+                                        <div class="text-2xl font-bold  pt-1">{{ pct(portfolio.data.volatility) }}</div>
                                      </div>
                                      <div class="bg-background p-4 rounded-lg">
                                         <div class="flex items-center gap-1 text-sm text-gray-400">
                                             <span>最大回撤</span>
                                             <i @click="openModal('maxDrawdown')" class="mdi mdi-information-outline cursor-pointer hover:text-primary transition-colors"></i>
                                         </div>
-                                        <div class="text-2xl font-bold text-error">{{ pct(portfolio.data.maxDrawdown) }}</div>
+                                        <div class="text-2xl font-bold text-error pt-1">{{ pct(portfolio.data.maxDrawdown) }}</div>
                                      </div>
                                      <div class="bg-background p-4 rounded-lg">
                                         <div class="flex items-center gap-1 text-sm text-gray-400">
-                                            <span>年化報酬/年化波動比</span>
+                                            <span>夏普比率(簡)</span>
                                             <i @click="openModal('sharpe')" class="mdi mdi-information-outline cursor-pointer hover:text-primary transition-colors"></i>
                                         </div>
-                                        <div class="text-2xl font-bold">{{ (portfolio.data.CAGR / portfolio.data.volatility).toFixed(2) }}</div>
+                                        <div class="text-2xl font-bold pt-1">{{ (portfolio.data.CAGR / portfolio.data.volatility).toFixed(2) }}</div>
                                      </div>
                                  </div>
                                  <div v-if="performancePeakDate || performanceThroughDate" class="text-left text-sm text-gray-400 mt-4 space-y-1 space-x-2">
