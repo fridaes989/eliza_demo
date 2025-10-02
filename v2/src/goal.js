@@ -14,6 +14,8 @@ const { createApp, ref, computed, watch, nextTick, onMounted } = Vue;
 const app = createApp({
     components: { 'strategy-card': StrategyCard, 'results-summary': ResultsSummary },
     setup() {
+        // 解決 iOS WebView <a> 點擊失效，改用 JS 跳轉
+        const openUrl = (url) => { window.location.href = url; };
         const isFormCollapsed = ref(false);
         const isMenuOpen = ref(false);
         const toggleMenu = () => { isMenuOpen.value = !isMenuOpen.value; };
@@ -717,6 +719,7 @@ const app = createApp({
             calculateButtonText, goalOptions, allGoalSlots, strategyOptions: strategyOptionsRef, calculate, selectUnsavedGoal,
             saveGoal, loadSavedGoal, deleteSavedGoal, showTooltip, moveTooltip, hideTooltip,
             getCalculatedTargetAmount, calculateGoalProgress, formatCurrency, chartColors,
+            openUrl,
         };
     }
 });

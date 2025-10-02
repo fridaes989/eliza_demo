@@ -241,7 +241,7 @@
                                         <div v-else class="text-center font-bold text-sm bg-primary-gradient text-white-hover p-2 rounded-md mb-2">建議月投：{{ formatCurrency(rec.requiredMonthly, rec.unit) }}</div>
                                     </div>
                                     <div class="p-4 pt-0 mt-auto">
-                                          <a :href="rec.url" target="_blank" class="block w-full text-center bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md transition-colors">查看詳情</a>
+                                          <a href="#" @click.prevent="openUrl(rec.url)" role="button" tabindex="0" class="block w-full text-center bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-md transition-transform duration-300 focus:outline-none focus:ring-2 focus:ring-primary">查看詳情</a>
                                     </div>
 
                                 </div>
