@@ -227,7 +227,7 @@
                             <h2 class="font-bold mb-4">策略投資組合建議</h2>
                             <p class="text-center text-xs text-gray-400 mb-6">請依照您的風險承受度選擇合適策略，而非單純追求最高報酬</p>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                <a v-for="rec in recommendationResults.filter(r => r.name !== results.strategyName)" :key="rec.name" :href="rec.url" target="_blank" class="block bg-surface rounded-lg p-4 transition-all duration-300 hover:scale-105 hover:shadow-lg border-2 border-transparent">
+                                <a v-for="rec in recommendationResults.filter(r => r.name !== results.strategyName)" :key="rec.name" :href="rec.url" target="_blank" role="button" tabindex="0" class="block bg-surface rounded-lg p-4 transition-transform duration-300 hover:shadow-lg border-2 border-transparent focus:outline-none focus:ring-2 focus:ring-primary">
                                     <h4 class="font-bold text-lg text-center mb-2">{{ rec.name }}</h4>
                                     <p class="text-xs text-gray-400 mb-3 text-center">{{ rec.reason }}</p>
                                     

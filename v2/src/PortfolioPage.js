@@ -82,7 +82,7 @@ const PortfolioPage = {
                                         <div class="pie-chart-container"><canvas id="pie-chart"></canvas></div>
                                         <div class="w-full space-y-3">
                                             <div v-for="(percent, asset) in portfolio.data.allocations" :key="asset">
-                                                <a v-if="tickerUrls[asset]" :href="tickerUrls[asset]" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 bg-background/50 p-3 rounded-lg hover:bg-gray-800 transition-colors">
+                                                <a v-if="tickerUrls[asset]" href="#" @click.prevent="openUrl(tickerUrls[asset])" role="button" tabindex="0" class="flex items-center gap-3 bg-background/50 p-3 rounded-lg hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-primary">
                                                     <div class="w-4 h-4 rounded" :style="{ backgroundColor: pieColors[Object.keys(portfolio.data.allocations).indexOf(asset)] }"></div>
                                                     <span>{{ asset }}: {{ percent }}%</span>
                                                 </a>
@@ -386,11 +386,13 @@ const PortfolioPage = {
         watch(() => props.portfolio, checkOverflow, { deep: true });
 
         // Expose refs to the template
+        const openUrl = (url) => { window.location.href = url; };
         return {
             descriptionContainerEl, prosContainerEl, consContainerEl,
             showDescriptionToggle, showProsToggle, showConsToggle,
             activePieChart, setActivePieChart,
-            handleTouchStart, handleTouchEnd
+            handleTouchStart, handleTouchEnd,
+            openUrl
         };
     }
 };
