@@ -352,21 +352,123 @@ const app = createApp({
             if (el) {
                 el.innerHTML = content;
                 el.classList.add('visible');
-                moveTooltip(event);
+                // Use nextTick to ensure the tooltip content is rendered and sized
+                // before computing its position.
+                setTimeout(() => moveTooltip(event), 0);
             }
         };
+
         const moveTooltip = (event) => {
             const el = document.getElementById('chartTooltip');
-            if (el) {
-                const rect = el.getBoundingClientRect();
-                el.style.left = `${event.pageX - (rect.width / 2)}px`;
-                el.style.top = `${event.pageY - rect.height - 15}px`;
+            if (!el) return;
+
+            // Ensure we have the tooltip dimensions after content set
+            const tooltipRect = el.getBoundingClientRect();
+
+            // Get viewport info
+            const viewportWidth = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+            const viewportHeight = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+
+            // Margin from edges
+            const margin = 8;
+
+            // If event.target is available (bar element), prefer positioning relative to it
+            let anchorRect = null;
+            try {
+                if (event && event.target && event.target.getBoundingClientRect) {
+                    anchorRect = event.target.getBoundingClientRect();
+                }
+            } catch (e) {
+                anchorRect = null;
+            }
+
+            // Compute desired left: center over the anchor (bar) if possible, else use event.pageX
+            let desiredLeft;
+            if (anchorRect) {
+                // anchorRect.left is viewport-based; convert to page coordinate
+                const anchorCenterX = anchorRect.left + window.scrollX + (anchorRect.width / 2);
+                desiredLeft = anchorCenterX - (tooltipRect.width / 2);
+            } else if (event && typeof event.pageX === 'number') {
+                desiredLeft = event.pageX - (tooltipRect.width / 2);
+            } else {
+                desiredLeft = margin;
+            }
+
+            // Clamp left within viewport
+            const maxLeft = viewportWidth - tooltipRect.width - margin;
+            if (desiredLeft < margin) desiredLeft = margin;
+            if (desiredLeft > maxLeft) desiredLeft = Math.max(margin, maxLeft);
+
+            // Compute desired top: prefer above the anchor, otherwise below
+            let desiredTop;
+            if (anchorRect) {
+                const aboveTop = anchorRect.top - tooltipRect.height - 12; // 12px gap
+                const belowTop = anchorRect.bottom + 12; // 12px gap
+                if (aboveTop >= margin) {
+                    desiredTop = aboveTop + window.scrollY;
+                } else if (belowTop + tooltipRect.height <= viewportHeight - margin) {
+                    desiredTop = belowTop + window.scrollY;
+                } else {
+                    // fallback: clamp to viewport
+                    desiredTop = Math.max(margin, Math.min(aboveTop + window.scrollY, viewportHeight - tooltipRect.height - margin));
+                }
+            } else if (event && typeof event.pageY === 'number') {
+                desiredTop = event.pageY - tooltipRect.height - 15;
+                if (desiredTop < margin) desiredTop = Math.min(margin, event.pageY + 12);
+            } else {
+                desiredTop = margin + window.scrollY;
+            }
+
+            el.style.left = `${Math.round(desiredLeft)}px`;
+            el.style.top = `${Math.round(desiredTop)}px`;
+
+            // Position the tooltip arrow so it points at the anchor (if available).
+            try {
+                if (anchorRect) {
+                    const anchorCenterXPage = anchorRect.left + window.scrollX + (anchorRect.width / 2);
+                    const arrowOffset = anchorCenterXPage - desiredLeft; // px inside tooltip
+                    let arrowPercent = (arrowOffset / tooltipRect.width) * 100;
+                    if (!isFinite(arrowPercent)) arrowPercent = 50;
+                    // keep arrow a bit inset from edges
+                    arrowPercent = Math.max(8, Math.min(92, arrowPercent));
+                    el.style.setProperty('--arrow-left', `${arrowPercent}%`);
+                } else {
+                    el.style.setProperty('--arrow-left', `50%`);
+                }
+            } catch (e) {
+                el.style.setProperty('--arrow-left', `50%`);
             }
         };
         const hideTooltip = () => {
             const el = document.getElementById('chartTooltip');
             if (el) el.classList.remove('visible');
         };
+
+        // Ensure the tooltip closes when the user clicks or lifts their finger
+        // anywhere outside the tooltip or the bars. We add listeners once.
+        if (!window.__goalTooltipListenersAdded) {
+            const globalHideHandler = (e) => {
+                try {
+                    const el = document.getElementById('chartTooltip');
+                    if (!el || !el.classList.contains('visible')) return;
+                    const target = e.target;
+                    // If the user tapped/clicked inside the tooltip, keep it open
+                    if (el.contains(target)) return;
+                    // If the user tapped/clicked on a bar (or inside one), keep it open
+                    if (target.closest && target.closest('.bar')) return;
+                    // Otherwise hide
+                    hideTooltip();
+                } catch (err) {
+                    // swallow errors to avoid breaking page interactions
+                    console.error('globalHideHandler error', err);
+                }
+            };
+
+            document.addEventListener('click', globalHideHandler, { capture: true });
+            document.addEventListener('touchend', globalHideHandler, { passive: true, capture: true });
+            // mark as added so we don't attach multiple times
+            window.__goalTooltipListenersAdded = true;
+        }
 
         const saveGoal = async () => {
             // todo: 檢查是否登入
