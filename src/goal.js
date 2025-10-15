@@ -14,13 +14,11 @@ const { createApp, ref, computed, watch, nextTick, onMounted } = Vue;
 const app = createApp({
     components: { 'strategy-card': StrategyCard, 'results-summary': ResultsSummary },
     setup() {
-        // 解決 iOS WebView <a> 點擊失效，改用 JS 跳轉
-        const openUrl = (url) => { window.location.href = url; };
         const isFormCollapsed = ref(false);
         const isMenuOpen = ref(false);
         const toggleMenu = () => { isMenuOpen.value = !isMenuOpen.value; };
 
-        const API_BASE_URL = 'https://development-executeapi.cmoney.tw/MemberSurvey/forms';
+        const API_BASE_URL = 'https://member.cmoney.tw/MemberSurvey/forms';
 
         const defaultGoalTypes = {
             retirement: { key: 'retirement', title: "退休規劃", icon: "mdi-beach", CurrentAge: "目前年齡", ageLabel: "預計退休年齡", amountLabel: "每月期望退休被動收入 (美元)", currentAssets: "當前總資產 (萬美元)", monthlyInvestment: "每月投資金額 (萬美元)", withdrawRate: 0.04, formId: 3 },
@@ -43,9 +41,9 @@ const app = createApp({
 
         const strategies = {
             '全天候策略': { icon: 'mdi-weather-pouring', expectedReturn: 0.037, volatility: 0.09, url: 'all_weather.html', allocation: { 'VTI': 30, 'TLT': 40, 'IEF': 15, 'GLD': 7.5, 'DBC': 7.5 }, simplifiedAllocation: { '股票': 30, '債券': 55, '其他': 15 }, description: '股債比為 30/55，另有 15% 為非股非債資產。' },
-            '三基金組合': { icon: 'mdi-vector-triangle', expectedReturn: 0.068, volatility: 0.1256, url: 'classic3.html', allocation: { 'VTI (美國股市)': 42, 'VXUS (國際股市)': 18, 'BND (債券)': 40 }, simplifiedAllocation: { '股票': 60, '債券': 40 }, description: '股債比為 60/40。' },
+            '三基金組合': { icon: 'mdi-vector-triangle', expectedReturn: 0.068, volatility: 0.1256, url: 'classic3.html', allocation: { 'VTI (美國股市)': 60, 'VTIAX (國際股市)': 20, 'BND (債券)': 20 }, simplifiedAllocation: { '股票': 80, '債券': 20 }, description: '股債比為 80/20。' },
             '核心四基金': { icon: 'mdi-sitemap', expectedReturn: 0.069, volatility: 0.125, url: 'core4.html', allocation: { 'VTI (美國股市)': 50, 'VXUS': 20, 'VNQ': 10, 'BND (債券)': 20 }, simplifiedAllocation: { '股票': 70, '債券': 20, '其他': 10 }, description: '股債比為 70/20，另有 10% 為不動產資產。' },
-            '積極型股債組合': { icon: 'mdi-rocket-launch', expectedReturn: 0.075, volatility: 0.1263, url: 'aggressive.html', allocation: { 'VTI (美國股市)': 80, 'BNDW (債券)': 20 }, simplifiedAllocation: { '股票': 80, '債券': 20 }, description: '股債比為 80/20。' },
+            '積極型股債組合': { icon: 'mdi-rocket-launch', expectedReturn: 0.075, volatility: 0.1263, url: 'aggressive.html', allocation: { 'VTI (美國股市)': 70, 'VTIAX (國際股市)': 10, 'BND (債券)': 20 }, simplifiedAllocation: { '股票': 80, '債券': 20 }, description: '股債比為 80/20。' },
             '巴菲特推薦': { icon: 'mdi-face-man-shimmer', expectedReturn: 0.123, volatility: 0.152, url: 'voo.html', allocation: { 'VOO': 100 }, simplifiedAllocation: { '股票': 100 }, description: '全壓股票，股債比為 100/0。' }
         };
 
@@ -357,10 +355,9 @@ const app = createApp({
                 setTimeout(() => moveTooltip(event), 0);
             }
         };
-
         const moveTooltip = (event) => {
             const el = document.getElementById('chartTooltip');
-            if (!el) return;
+             if (!el) return;
 
             // Ensure we have the tooltip dimensions after content set
             const tooltipRect = el.getBoundingClientRect();
@@ -443,7 +440,6 @@ const app = createApp({
             const el = document.getElementById('chartTooltip');
             if (el) el.classList.remove('visible');
         };
-
         // Ensure the tooltip closes when the user clicks or lifts their finger
         // anywhere outside the tooltip or the bars. We add listeners once.
         if (!window.__goalTooltipListenersAdded) {
@@ -469,6 +465,7 @@ const app = createApp({
             // mark as added so we don't attach multiple times
             window.__goalTooltipListenersAdded = true;
         }
+
 
         const saveGoal = async () => {
             // todo: 檢查是否登入
@@ -821,7 +818,6 @@ const app = createApp({
             calculateButtonText, goalOptions, allGoalSlots, strategyOptions: strategyOptionsRef, calculate, selectUnsavedGoal,
             saveGoal, loadSavedGoal, deleteSavedGoal, showTooltip, moveTooltip, hideTooltip,
             getCalculatedTargetAmount, calculateGoalProgress, formatCurrency, chartColors,
-            openUrl,
         };
     }
 });
