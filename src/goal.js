@@ -19,7 +19,7 @@ const app = createApp({
         const toggleMenu = () => { isMenuOpen.value = !isMenuOpen.value; };
 
         const API_BASE_URL = 'https://development-executeapi.cmoney.tw/MemberSurvey/forms';
-        const AUTH_TOKEN = 'Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IldBRktTTVptVmN6YzVGckdqTlBOT090emZudmE5RDNvIiwidHlwIjoiSldUIn0.eyJzdWIiOiI0NzExMjIyIiwidXNlcl9ndWlkIjoiMDg4ZmIwOWMtNWE1Yy00MTQyLWI2NjctODFlNmVmZjJhMzU5IiwidG9rZW5faWQiOiIyMCIsImFwcF9pZCI6IjIxIiwiaXNfZ3Vlc3QiOmZhbHNlLCJuYmYiOjE3NTgyNjU1NjMsImV4cCI6MTc1ODM1NTU2MywiaWF0IjoxNzU4MjY5MTYzLCJpc3MiOiJodHRwczovL3d3dy5jbW9uZXkudHciLCJhdWQiOiJjbW9uZXlhcGkifQ.drOu61zkCjdsIQ7KK__B5RYtzTb69EcPqb7Wy-6o86awnkpAW-pCYRO368hFPmIP54tEKBzAu1DrerwlBeIWMN5uyEcODbwjo_qt-KsUOSWDcU0CDgbtMpqD3SWIrBKpGGuIC0-UxsoWi64igwwTGJyiRHFBa5kwu5lExBWeLji6os4sHG1x-u21f7TuCcUyDHGKg8Mfx9Bbv5-j37CkjeOiSfR9bTz2ulQHqqXrPWVCvQIgo6mSQbCNzlJ5uWNlL9LWzqxcLAqxgO5fnQop3QyE4e6mFRIe0UiDsy5bFByo4mypKQu_GFTulQx3vhS0pasAayH-b2oKSNZJx6Hljg';
+        const AUTH_TOKEN = '';
 
         const defaultGoalTypes = { 
             retirement: { key: 'retirement', title: "退休規劃", icon: "mdi-beach", CurrentAge:"目前年齡", ageLabel: "預計退休年齡", amountLabel: "每月期望退休被動收入(美元)", withdrawRate: 0.04, formId: 3 }, 
