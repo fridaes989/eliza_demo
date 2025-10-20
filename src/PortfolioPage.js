@@ -34,6 +34,7 @@ const PortfolioPage = {
                                     <a @click="toggleMenu" href="aggressive.html" :class="['text-2xl hover:text-primary transition-colors', { 'text-primary font-semibold': portfolio.name === '積極型股債組合' }]">積極型股債組合</a>
                                     <a @click="toggleMenu" href="core4.html" :class="['text-2xl hover:text-primary transition-colors', { 'text-primary font-semibold': portfolio.name === '核心四基金' }]">核心四基金</a>
                                     <a @click="toggleMenu" href="voo.html" :class="['text-2xl hover:text-primary transition-colors', { 'text-primary font-semibold': portfolio.name === '巴菲特推薦' }]">巴菲特推薦</a>
+                                    <a @click="toggleMenu" href="satellite.html" :class="['text-2xl hover:text-primary transition-colors', { 'text-primary font-semibold': portfolio.name === '核心-衛星策略' }]">核心-衛星策略</a>
                                 </div>
                             </div>
                         </transition>
